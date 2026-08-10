@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResiSync - IoT-Enabled Residential Operations Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="mode-emulator">
+  <!-- Top Navigation & View Controller Bar (Desktop Preview) -->
+  <header class="top-nav-bar">
+    <div class="brand-badge">
+      <div class="logo-icon-sm">
+        <svg viewBox="0 0 48 32" width="28" height="20" fill="none">
+          <path d="M6 16C6 10.477 10.477 6 16 6C20.5 6 24 10 24 16C24 22 27.5 26 32 26C37.523 26 42 21.523 42 16C42 10.477 37.523 6 32 6C27.5 6 24 10 24 16C24 22 20.5 26 16 26C10.477 26 6 21.523 6 16Z" stroke="#FF8A00" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 12L16 8L20 12M28 20L32 24L36 20" stroke="#FF8A00" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <span class="brand-title">ResiSync</span>
+        <span class="brand-sub">IoT Residential Platform</span>
+      </div>
+    </div>
+
+    <!-- Quick Role Persona Switcher -->
+    <div class="role-selector-pill">
+      <span class="role-label">Active Role:</span>
+      <button class="role-btn active" data-role="resident" onclick="switchRole('resident')">
+        <span class="role-dot resident-dot"></span> Resident (Shivani)
+      </button>
+      <button class="role-btn" data-role="security" onclick="switchRole('security')">
+        <span class="role-dot security-dot"></span> Gate Security
+      </button>
+      <button class="role-btn" data-role="admin" onclick="switchRole('admin')">
+        <span class="role-dot admin-dot"></span> Society Admin
+      </button>
+    </div>
+
+    <!-- Mode Selector & Quick Screen Jumper -->
+    <div class="top-actions">
+      <div class="screen-jumper-wrap">
+        <select id="screenSelect" onchange="navigateToScreen(this.value)">
+          <option value="1">1. Splash Screen</option>
+          <option value="2">2. Login / Welcome</option>
+          <option value="3" selected>3. Resident Dashboard</option>
+          <option value="4">4. Visitor Management</option>
+          <option value="5">5. Maintenance Payment</option>
+          <option value="6">6. Amenities Booking</option>
+          <option value="7">7. Helpdesk</option>
+          <option value="8">8. Alerts & Emergency</option>
+          <option value="9">9. IoT / Smart Society</option>
+          <option value="10">10. Admin Dashboard</option>
+          <option value="11">11. Security Guard</option>
+          <option value="12">12. Profile Screen</option>
+        </select>
+      </div>
+
+      <div class="view-switch-btns">
+        <button id="btnPhoneView" class="view-btn active" onclick="setViewMode('emulator')" title="Interactive Mobile App Emulator">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+          Interactive Phone
+        </button>
+        <button id="btnShowcaseView" class="view-btn" onclick="setViewMode('showcase')" title="Showcase All 12 Screens Side-by-Side (Prototype Grid)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          12-Screen Grid View
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Showcase / Emulator Container -->
+  <main class="app-workspace">
+
+    <!-- ================= EMULATOR VIEW WRAPPER ================= -->
+    <div class="phone-frame-container" id="phoneContainer">
+      <div class="phone-frame">
+        <div class="phone-speaker"></div>
+        <div class="phone-camera"></div>
+
+        <!-- Phone Screen Viewport -->
+        <div class="phone-viewport" id="activeScreenViewport">
+          <!-- Dynamic Content rendered by app.js from template screens -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 12-SCREEN SHOWCASE GRID (Reference Layout) ================= -->
+    <div class="showcase-grid-container" id="showcaseGrid">
+      <div class="showcase-header-banner">
+        <h2>ResiSync UI Component System & Screen Flow</h2>
+        <p>Complete 12-screen responsive design reference matching high-fidelity mobile prototype.</p>
+      </div>
+      <div class="showcase-grid" id="showcaseScreensMount">
+        <!-- All 12 screens will be rendered here simultaneously in Showcase Mode -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= SCREEN TEMPLATES REPOSITORY ================= -->
+  <div id="screenTemplates" style="display:none;">
+
+    <!-- ================= 1. SPLASH SCREEN ================= -->
+    <div class="screen-template" id="template-screen-1" data-title="1. SPLASH SCREEN">
+      <div class="screen splash-screen">
+        <div class="splash-content">
+          <div class="splash-logo-wrap">
+            <div class="glowing-orb"></div>
+            <svg class="splash-logo-svg" viewBox="0 0 100 70" fill="none">
+              <!-- Connected Roofs Infinity Motif -->
+              <path d="M15 36C15 24 24 14 36 14C46 14 53 22 53 36C53 50 60 58 70 58C82 58 91 48 91 36C91 24 82 14 70 14C60 14 53 22 53 36C53 50 46 58 36 58C24 58 15 48 15 36Z" stroke="url(#splashGrad)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M26 26L36 18L46 26M60 46L70 54L80 46" stroke="#FF9D2E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="splashGrad" x1="10" y1="10" x2="95" y2="60" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#FF5722"/>
+                  <stop offset="0.5" stop-color="#FF8A00"/>
+                  <stop offset="1" stop-color="#FFAE33"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h1 class="splash-title">ResiSync</h1>
+          <p class="splash-subtitle">IoT-Enabled Residential Operations Platform</p>
+          <div class="splash-loader">
+            <div class="circular-spinner"></div>
+          </div>
+        </div>
+        <div class="screen-footer-label">1. SPLASH SCREEN</div>
+      </div>
+    </div>
+
+    <!-- ================= 2. LOGIN / WELCOME ================= -->
+    <div class="screen-template" id="template-screen-2" data-title="2. LOGIN / WELCOME">
+      <div class="screen login-screen">
+        <div class="screen-body login-body">
+          <div class="login-header">
+            <div class="brand-icon-mid">
+              <svg viewBox="0 0 100 70" fill="none" width="54" height="38">
+                <path d="M15 36C15 24 24 14 36 14C46 14 53 22 53 36C53 50 60 58 70 58C82 58 91 48 91 36C91 24 82 14 70 14C60 14 53 22 53 36C53 50 46 58 36 58C24 58 15 48 15 36Z" stroke="#FF8A00" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M26 26L36 18L46 26M60 46L70 54L80 46" stroke="#FFAE33" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h2 class="brand-text">ResiSync</h2>
+            <h3 class="welcome-heading">Welcome to ResiSync</h3>
+            <p class="welcome-sub">Your smarter way to manage residential living.</p>
+          </div>
+
+          <form class="login-form" onsubmit="handleLoginSubmit(event)">
+            <div class="input-group">
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </span>
+              <input type="text" id="loginUsername" placeholder="Mobile Number / Email" value="shivani@resisync.io" required>
+            </div>
+
+            <div class="input-group">
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </span>
+              <input type="password" id="loginPassword" placeholder="Password" value="••••••••" required>
+              <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility('loginPassword', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+            </div>
+
+            <div class="form-row-between">
+              <label class="remember-label">
+                <input type="checkbox" checked>
+                <span>Remember Me</span>
+              </label>
+              <a href="#" class="forgot-link" onclick="openToast('Password reset link sent to your registered mobile number')">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">Sign In</button>
+            <button type="button" class="btn-secondary-outline btn-block" onclick="openToast('Registration portal: Please contact Flat A-204 Society Admin')">Create Account</button>
+
+            <div class="role-switch-login">
+              <button type="button" class="security-continue-link" onclick="switchRole('security'); navigateToScreen('11');">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Continue as Security
+              </button>
+            </div>
+          </form>
+        </div>
+        <div class="screen-footer-label">2. LOGIN / WELCOME</div>
+      </div>
+    </div>
+
+    <!-- ================= 3. RESIDENT DASHBOARD ================= -->
+    <div class="screen-template" id="template-screen-3" data-title="3. RESIDENT DASHBOARD">
+      <div class="screen dashboard-screen">
+        <!-- Header -->
+        <div class="screen-header">
+          <div class="user-greeting-meta">
+            <p class="greet-text">Good Morning,</p>
+            <h3 class="user-name">Shivani <span class="wave-emoji">👋</span></h3>
+            <span class="flat-badge">Flat A-204</span>
+          </div>
+          <div class="header-right-actions">
+            <div class="user-avatar-sm" onclick="navigateToScreen('12')">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Shivani" />
+            </div>
+            <button class="btn-icon-badge" onclick="navigateToScreen('8')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <span class="dot-badge"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- Society Status Bar -->
+          <div class="section-card status-section">
+            <div class="section-card-header">
+              <h4>Society Status</h4>
+              <span class="status-pill-green" onclick="navigateToScreen('9')">All systems operational</span>
+            </div>
+            <div class="status-grid-4">
+              <div class="status-metric-card" onclick="navigateToScreen('9')">
+                <div class="metric-icon-box green">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </div>
+                <div class="metric-title">Security</div>
+                <div class="metric-status green-text">Active</div>
+              </div>
+
+              <div class="status-metric-card" onclick="navigateToScreen('9')">
+                <div class="metric-icon-box yellow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
+                <div class="metric-title">Power</div>
+                <div class="metric-status yellow-text">Normal</div>
+              </div>
+
+              <div class="status-metric-card" onclick="navigateToScreen('9')">
+                <div class="metric-icon-box blue">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                </div>
+                <div class="metric-title">Water</div>
+                <div class="metric-status blue-text">Normal</div>
+              </div>
+
+              <div class="status-metric-card" onclick="navigateToScreen('9')">
+                <div class="metric-icon-box green">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                </div>
+                <div class="metric-title">Internet</div>
+                <div class="metric-status green-text">Operational</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Grid -->
+          <div class="section-card quick-actions-section">
+            <div class="section-card-header">
+              <h4>Quick Actions</h4>
+              <a href="#" class="view-all-link" onclick="openToast('Showing all resident services')">View All</a>
+            </div>
+            <div class="quick-actions-grid">
+              <div class="action-tile" onclick="navigateToScreen('4')">
+                <div class="action-tile-icon orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <div class="action-tile-title">Visitors</div>
+                <div class="action-tile-desc">Manage visitors</div>
+              </div>
+
+              <div class="action-tile" onclick="navigateToScreen('5')">
+                <div class="action-tile-icon orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                </div>
+                <div class="action-tile-title">Maintenance</div>
+                <div class="action-tile-desc">Pay maintenance</div>
+              </div>
+
+              <div class="action-tile" onclick="navigateToScreen('6')">
+                <div class="action-tile-icon orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </div>
+                <div class="action-tile-title">Amenities</div>
+                <div class="action-tile-desc">Book amenities</div>
+              </div>
+
+              <div class="action-tile" onclick="navigateToScreen('7')">
+                <div class="action-tile-icon orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                </div>
+                <div class="action-tile-title">Helpdesk</div>
+                <div class="action-tile-desc">Raise a request</div>
+              </div>
+
+              <div class="action-tile" onclick="navigateToScreen('8')">
+                <div class="action-tile-icon red">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+                <div class="action-tile-title">Emergency</div>
+                <div class="action-tile-desc">Emergency alert</div>
+              </div>
+
+              <div class="action-tile" onclick="openToast('Deliveries: 2 Packages awaiting at Gate 1')">
+                <div class="action-tile-icon orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                </div>
+                <div class="action-tile-title">Deliveries</div>
+                <div class="action-tile-desc">Track deliveries</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Arrival Banner -->
+          <div class="upcoming-arrival-card" onclick="navigateToScreen('4')">
+            <div class="upcoming-label">Upcoming</div>
+            <div class="upcoming-content-row">
+              <div class="arrival-icon-circle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <div class="arrival-details">
+                <div class="arrival-type">Visitor Arrival</div>
+                <div class="arrival-name">Mr. Amit Sharma</div>
+                <div class="arrival-time">Today, 11:00 AM</div>
+              </div>
+              <div class="arrival-status-tag">Expected</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- App Bottom Nav Bar -->
+        <nav class="bottom-nav">
+          <button class="nav-item active" onclick="navigateToScreen('3')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-item" onclick="navigateToScreen('9')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <span>Services</span>
+          </button>
+          <button class="nav-item" onclick="navigateToScreen('8')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span>Alerts</span>
+          </button>
+          <button class="nav-item" onclick="navigateToScreen('12')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Profile</span>
+          </button>
+        </nav>
+        <div class="screen-footer-label">3. RESIDENT DASHBOARD</div>
+      </div>
+    </div>
+
+    <!-- ================= 4. VISITOR MANAGEMENT ================= -->
+    <div class="screen-template" id="template-screen-4" data-title="4. VISITOR MANAGEMENT">
+      <div class="screen subpage-screen visitors-screen">
+        <div class="subpage-header">
+          <button class="btn-back" onclick="navigateToScreen('3')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <h3>Visitors</h3>
+          <button class="btn-header-action" onclick="openQrModal('Shivani Gudekar', 'A-204')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          </button>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- Invite Visitor Button -->
+          <button class="btn-primary btn-block mb-3" onclick="openInviteVisitorModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            + Invite Visitor
+          </button>
+
+          <!-- Tabs -->
+          <div class="filter-tab-bar">
+            <button class="tab-btn active" onclick="filterVisitors('upcoming', this)">Upcoming</button>
+            <button class="tab-btn" onclick="filterVisitors('today', this)">Today</button>
+            <button class="tab-btn" onclick="filterVisitors('history', this)">History</button>
+          </div>
+
+          <!-- Visitor List Cards -->
+          <div class="visitor-list" id="visitorCardsContainer">
+            <!-- Amit Sharma -->
+            <div class="visitor-item-card" data-category="today">
+              <div class="visitor-avatar-wrap">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="Amit">
+              </div>
+              <div class="visitor-meta">
+                <div class="visitor-name-row">
+                  <h5>Amit Sharma</h5>
+                  <span class="tag-expected">Expected</span>
+                </div>
+                <div class="visitor-sub">Personal Guest</div>
+                <div class="visitor-time">Today, 11:00 AM</div>
+                <div class="action-btn-row mt-2">
+                  <button class="btn-mini-approve" onclick="handleVisitorAction(this, 'Approved')">Approve</button>
+                  <button class="btn-mini-reject" onclick="handleVisitorAction(this, 'Rejected')">Reject</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rohit Verma -->
+            <div class="visitor-item-card" data-category="today">
+              <div class="visitor-avatar-wrap">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" alt="Rohit">
+              </div>
+              <div class="visitor-meta">
+                <div class="visitor-name-row">
+                  <h5>Rohit Verma</h5>
+                  <span class="tag-expected">Expected</span>
+                </div>
+                <div class="visitor-sub">Delivery</div>
+                <div class="visitor-time">Today, 02:30 PM</div>
+                <div class="action-btn-row mt-2">
+                  <button class="btn-mini-approve" onclick="handleVisitorAction(this, 'Approved')">Approve</button>
+                  <button class="btn-mini-reject" onclick="handleVisitorAction(this, 'Rejected')">Reject</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Neha Kapoor -->
+            <div class="visitor-item-card" data-category="upcoming">
+              <div class="visitor-avatar-wrap">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" alt="Neha">
+              </div>
+              <div class="visitor-meta">
+                <div class="visitor-name-row">
+                  <h5>Neha Kapoor</h5>
+                  <span class="tag-expected">Expected</span>
+                </div>
+                <div class="visitor-sub">Service Provider</div>
+                <div class="visitor-time">Tomorrow, 10:00 AM</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom QR Code Banner -->
+          <div class="qr-entry-card" onclick="openQrModal('Shivani Gudekar', 'A-204')">
+            <div class="qr-text-meta">
+              <div class="qr-title">QR Code Entry</div>
+              <div class="qr-desc">Scan visitor QR to check-in</div>
+            </div>
+            <div class="qr-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><line x1="7" y1="7" x2="7.01" y2="7"></line><line x1="17" y1="7" x2="17.01" y2="7"></line><line x1="7" y1="17" x2="7.01" y2="17"></line><line x1="17" y1="17" x2="17.01" y2="17"></line></svg>
+            </div>
+          </div>
+        </div>
+        <div class="screen-footer-label">4. VISITOR MANAGEMENT</div>
+      </div>
+    </div>
+
+    <!-- ================= 5. MAINTENANCE PAYMENT ================= -->
+    <div class="screen-template" id="template-screen-5" data-title="5. MAINTENANCE PAYMENT">
+      <div class="screen subpage-screen maintenance-screen">
+        <div class="subpage-header">
+          <button class="btn-back" onclick="navigateToScreen('3')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <h3>Maintenance</h3>
+          <button class="btn-header-action" onclick="openReceiptModal('10 Aug 2026', '₹3,500', 'PENDING')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </button>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- Due Card -->
+          <div class="maintenance-due-card">
+            <div class="due-header-row">
+              <div class="due-label">Maintenance Due</div>
+              <div class="due-doc-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF8A00" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              </div>
+            </div>
+            <div class="due-amount" id="mainDueAmount">₹3,500</div>
+            <div class="due-date">Due Date: 10 Aug 2026</div>
+            <button class="btn-primary btn-block mt-3" id="btnPayNow" onclick="openPaymentGatewayModal()">Pay Now</button>
+          </div>
+
+          <!-- Breakup Card -->
+          <div class="section-card breakup-section">
+            <h4>Breakup</h4>
+            <div class="breakup-table">
+              <div class="breakup-row">
+                <span>Maintenance</span>
+                <span class="bold-text">₹2,500</span>
+              </div>
+              <div class="breakup-row">
+                <span>Water Charges</span>
+                <span class="bold-text">₹500</span>
+              </div>
+              <div class="breakup-row">
+                <span>Parking</span>
+                <span class="bold-text">₹300</span>
+              </div>
+              <div class="breakup-row">
+                <span>Other Charges</span>
+                <span class="bold-text">₹200</span>
+              </div>
+              <div class="breakup-divider"></div>
+              <div class="breakup-row total-row">
+                <span class="bold-text">Total</span>
+                <span class="total-amount-highlight">₹3,500</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment History -->
+          <div class="payment-history-section">
+            <div class="section-card-header">
+              <h4>Payment History</h4>
+              <a href="#" class="view-all-link" onclick="openToast('Showing all archived statements')">View All</a>
+            </div>
+
+            <div class="history-list" id="paymentHistoryList">
+              <div class="history-item">
+                <div class="history-date">08 Jul 2026</div>
+                <div class="history-amt">₹3,500</div>
+                <span class="tag-paid">Paid</span>
+                <button class="btn-download-receipt" onclick="openReceiptModal('08 Jul 2026', '₹3,500', 'PAID')" title="Download Receipt">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </button>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">08 Jun 2026</div>
+                <div class="history-amt">₹3,500</div>
+                <span class="tag-paid">Paid</span>
+                <button class="btn-download-receipt" onclick="openReceiptModal('08 Jun 2026', '₹3,500', 'PAID')" title="Download Receipt">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </button>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">08 May 2026</div>
+                <div class="history-amt">₹3,500</div>
+                <span class="tag-paid">Paid</span>
+                <button class="btn-download-receipt" onclick="openReceiptModal('08 May 2026', '₹3,500', 'PAID')" title="Download Receipt">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-footer-label">5. MAINTENANCE PAYMENT</div>
+      </div>
+    </div>
+
+    <!-- ================= 6. AMENITIES BOOKING ================= -->
+    <div class="screen-template" id="template-screen-6" data-title="6. AMENITIES BOOKING">
+      <div class="screen subpage-screen amenities-screen">
+        <div class="subpage-header">
+          <button class="btn-back" onclick="navigateToScreen('3')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <h3>Amenities</h3>
+          <div style="width:24px"></div>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- Filter Tabs -->
+          <div class="filter-tab-bar">
+            <button class="tab-btn active" onclick="filterAmenities('all', this)">All</button>
+            <button class="tab-btn" onclick="filterAmenities('available', this)">Available</button>
+            <button class="tab-btn" onclick="filterAmenities('my', this)">My Bookings</button>
+          </div>
+
+          <!-- Amenities Grid -->
+          <div class="amenities-grid" id="amenitiesCardsContainer">
+            <!-- 1. Swimming Pool -->
+            <div class="amenity-card" data-category="available">
+              <div class="amenity-img-box">
+                <img src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=400&auto=format&fit=crop&q=80" alt="Swimming Pool">
+              </div>
+              <div class="amenity-content">
+                <div class="amenity-name">Swimming Pool</div>
+                <div class="amenity-status-tag available">Available</div>
+                <button class="btn-book-amenity" onclick="openAmenityBookingModal('Swimming Pool')">Book</button>
+              </div>
+            </div>
+
+            <!-- 2. Gym -->
+            <div class="amenity-card" data-category="available">
+              <div class="amenity-img-box">
+                <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&auto=format&fit=crop&q=80" alt="Gym">
+              </div>
+              <div class="amenity-content">
+                <div class="amenity-name">Gym</div>
+                <div class="amenity-status-tag available">Available</div>
+                <button class="btn-book-amenity" onclick="openAmenityBookingModal('Gym')">Book</button>
+              </div>
+            </div>
+
+            <!-- 3. Club House -->
+            <div class="amenity-card" data-category="available">
+              <div class="amenity-img-box">
+                <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&auto=format&fit=crop&q=80" alt="Club House">
+              </div>
+              <div class="amenity-content">
+                <div class="amenity-name">Club House</div>
+                <div class="amenity-status-tag available">Available</div>
+                <button class="btn-book-amenity" onclick="openAmenityBookingModal('Club House')">Book</button>
+              </div>
+            </div>
+
+            <!-- 4. Party Hall -->
+            <div class="amenity-card" data-category="available">
+              <div class="amenity-img-box">
+                <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=400&auto=format&fit=crop&q=80" alt="Party Hall">
+              </div>
+              <div class="amenity-content">
+                <div class="amenity-name">Party Hall</div>
+                <div class="amenity-status-tag available">Available</div>
+                <button class="btn-book-amenity" onclick="openAmenityBookingModal('Party Hall')">Book</button>
+              </div>
+            </div>
+
+            <!-- 5. Sports Court -->
+            <div class="amenity-card" data-category="available">
+              <div class="amenity-img-box">
+                <img src="https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=400&auto=format&fit=crop&q=80" alt="Sports Court">
+              </div>
+              <div class="amenity-content">
+                <div class="amenity-name">Sports Court</div>
+                <div class="amenity-status-tag available">Available</div>
+                <button class="btn-book-amenity" onclick="openAmenityBookingModal('Sports Court')">Book</button>
+              </div>
+            </div>
+
+            <!-- 6. Garden -->
+            <div class="amenity-card" data-category="available">
+              <div class="amenity-img-box">
+                <img src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=400&auto=format&fit=crop&q=80" alt="Garden">
+              </div>
+              <div class="amenity-content">
+                <div class="amenity-name">Garden</div>
+                <div class="amenity-status-tag available">Available</div>
+                <button class="btn-book-amenity" onclick="openAmenityBookingModal('Garden Gazebo')">Book</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-footer-label">6. AMENITIES BOOKING</div>
+      </div>
+    </div>
+
+    <!-- ================= 7. HELPDESK ================= -->
+    <div class="screen-template" id="template-screen-7" data-title="7. HELPDESK">
+      <div class="screen subpage-screen helpdesk-screen">
+        <div class="subpage-header">
+          <button class="btn-back" onclick="navigateToScreen('3')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <h3>Helpdesk</h3>
+          <div style="width:24px"></div>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- Raise Request CTA -->
+          <button class="btn-primary btn-block mb-3" onclick="openRaiseTicketModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            + Raise Request
+          </button>
+
+          <!-- Categories -->
+          <div class="section-heading-sm">Categories</div>
+          <div class="categories-grid-6">
+            <div class="cat-pill active" onclick="selectHelpdeskCategory('Plumbing', this)">
+              <div class="cat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></div>
+              <span>Plumbing</span>
+            </div>
+            <div class="cat-pill" onclick="selectHelpdeskCategory('Electrical', this)">
+              <div class="cat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+              <span>Electrical</span>
+            </div>
+            <div class="cat-pill" onclick="selectHelpdeskCategory('Cleaning', this)">
+              <div class="cat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg></div>
+              <span>Cleaning</span>
+            </div>
+            <div class="cat-pill" onclick="selectHelpdeskCategory('Security', this)">
+              <div class="cat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+              <span>Security</span>
+            </div>
+            <div class="cat-pill" onclick="selectHelpdeskCategory('Maintenance', this)">
+              <div class="cat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+              <span>Maintenance</span>
+            </div>
+            <div class="cat-pill" onclick="selectHelpdeskCategory('Other', this)">
+              <div class="cat-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></div>
+              <span>Other</span>
+            </div>
+          </div>
+
+          <!-- My Requests List -->
+          <div class="section-heading-sm mt-3">My Requests</div>
+          <div class="requests-list" id="requestsListContainer">
+            <!-- REQ1234 -->
+            <div class="request-card">
+              <div class="req-icon-col orange">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+              </div>
+              <div class="req-details-col">
+                <div class="req-header-row">
+                  <span class="req-code">REQ1234</span>
+                  <span class="tag-status in-progress">In Progress</span>
+                </div>
+                <div class="req-cat-name">Plumbing</div>
+                <div class="req-desc">Washroom pipe leakage</div>
+                <div class="req-timestamp">09 Jul 2026 • 10:30 AM</div>
+              </div>
+              <div class="req-arrow">›</div>
+            </div>
+
+            <!-- REQ1208 -->
+            <div class="request-card">
+              <div class="req-icon-col green">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
+              <div class="req-details-col">
+                <div class="req-header-row">
+                  <span class="req-code">REQ1208</span>
+                  <span class="tag-status resolved">Resolved</span>
+                </div>
+                <div class="req-cat-name">Electrical</div>
+                <div class="req-desc">Fan not working</div>
+                <div class="req-timestamp">05 Jul 2026 • 02:15 PM</div>
+              </div>
+              <div class="req-arrow">›</div>
+            </div>
+
+            <!-- REQ1180 -->
+            <div class="request-card">
+              <div class="req-icon-col blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+              </div>
+              <div class="req-details-col">
+                <div class="req-header-row">
+                  <span class="req-code">REQ1180</span>
+                  <span class="tag-status open">Open</span>
+                </div>
+                <div class="req-cat-name">Cleaning</div>
+                <div class="req-desc">Common area cleaning</div>
+                <div class="req-timestamp">01 Jul 2026 • 09:00 AM</div>
+              </div>
+              <div class="req-arrow">›</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-footer-label">7. HELPDESK</div>
+      </div>
+    </div>
+
+    <!-- ================= 8. ALERTS & EMERGENCY ================= -->
+    <div class="screen-template" id="template-screen-8" data-title="8. ALERTS & EMERGENCY">
+      <div class="screen subpage-screen alerts-screen">
+        <div class="subpage-header">
+          <button class="btn-back" onclick="navigateToScreen('3')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <h3>Alerts</h3>
+          <div style="width:24px"></div>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- Filter Tabs -->
+          <div class="filter-tab-bar">
+            <button class="tab-btn active" onclick="filterAlerts('all', this)">All</button>
+            <button class="tab-btn" onclick="filterAlerts('unread', this)">Unread <span class="badge-count">3</span></button>
+          </div>
+
+          <!-- Alert Cards -->
+          <div class="alerts-feed" id="alertsFeed">
+            <!-- 1. URGENT -->
+            <div class="alert-item-card urgent-card">
+              <div class="alert-type-header">
+                <div class="alert-icon-circle red">!</div>
+                <span class="alert-type-badge red">URGENT</span>
+              </div>
+              <div class="alert-message">Water supply maintenance scheduled on 12 Aug 2026</div>
+              <div class="alert-timestamp">09 Jul 2026 • 08:30 AM</div>
+            </div>
+
+            <!-- 2. IMPORTANT -->
+            <div class="alert-item-card important-card">
+              <div class="alert-type-header">
+                <div class="alert-icon-circle yellow">!</div>
+                <span class="alert-type-badge yellow">IMPORTANT</span>
+              </div>
+              <div class="alert-message">Security alert at Gate 2<br>Please avoid that area</div>
+              <div class="alert-timestamp">09 Jul 2026 • 07:15 AM</div>
+            </div>
+
+            <!-- 3. GENERAL -->
+            <div class="alert-item-card general-card">
+              <div class="alert-type-header">
+                <div class="alert-icon-circle blue">i</div>
+                <span class="alert-type-badge blue">GENERAL</span>
+              </div>
+              <div class="alert-message">Society meeting at 6:00 PM in Club House</div>
+              <div class="alert-timestamp">08 Jul 2026 • 06:00 PM</div>
+            </div>
+          </div>
+
+          <!-- Prominent SOS Emergency Button -->
+          <button class="btn-emergency-assistance" onclick="triggerSosEmergency()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Emergency Assistance
+          </button>
+        </div>
+        <div class="screen-footer-label">8. ALERTS & EMERGENCY</div>
+      </div>
+    </div>
+
+    <!-- ================= 9. IOT / SMART SOCIETY ================= -->
+    <div class="screen-template" id="template-screen-9" data-title="9. IOT / SMART SOCIETY">
+      <div class="screen subpage-screen iot-screen">
+        <div class="subpage-header">
+          <button class="btn-back" onclick="navigateToScreen('3')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <h3>Smart Society</h3>
+          <button class="btn-header-action" onclick="refreshIoTTelemetry()" title="Refresh IoT Nodes">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </button>
+        </div>
+
+        <div class="screen-scroll-content">
+          <div class="section-heading-sm mb-2">Live Society Status</div>
+
+          <!-- 2x2 Telemetry Grid -->
+          <div class="iot-telemetry-grid">
+            <!-- Power Gauge -->
+            <div class="iot-card power-card">
+              <div class="iot-meta-left">
+                <div class="iot-title">Power</div>
+                <div class="iot-status green">Normal</div>
+                <div class="iot-subval" id="iotPowerUsage">72% Usage</div>
+              </div>
+              <div class="iot-circle-gauge yellow-gauge">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFB300" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
+            </div>
+
+            <!-- Water Gauge -->
+            <div class="iot-card water-card">
+              <div class="iot-meta-left">
+                <div class="iot-title">Water</div>
+                <div class="iot-status green">Normal</div>
+                <div class="iot-subval" id="iotWaterTank">Tank 78%</div>
+              </div>
+              <div class="iot-circle-gauge blue-gauge">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2979FF" stroke-width="2.5"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+              </div>
+            </div>
+
+            <!-- Security Gauge -->
+            <div class="iot-card security-card">
+              <div class="iot-meta-left">
+                <div class="iot-title">Security</div>
+                <div class="iot-status green">Active</div>
+                <div class="iot-subval">24 / 24 Online</div>
+              </div>
+              <div class="iot-circle-gauge green-gauge">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              </div>
+            </div>
+
+            <!-- Parking Gauge -->
+            <div class="iot-card parking-card">
+              <div class="iot-meta-left">
+                <div class="iot-title">Parking</div>
+                <div class="iot-status green">Available</div>
+                <div class="iot-subval" id="iotParkingSpaces">18 Spaces</div>
+              </div>
+              <div class="iot-circle-gauge blue-gauge">
+                <span class="parking-p-letter">P</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Environment 2-Col -->
+          <div class="env-metrics-grid mt-3">
+            <div class="env-card">
+              <div class="env-meta">
+                <div class="env-title">Temperature</div>
+                <div class="env-val" id="iotTemp">26°C</div>
+                <div class="env-sub">Normal</div>
+              </div>
+              <div class="env-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#29B6F6" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+              </div>
+            </div>
+
+            <div class="env-card">
+              <div class="env-meta">
+                <div class="env-title">Air Quality</div>
+                <div class="env-val text-green">Good</div>
+                <div class="env-sub" id="iotAqi">AQI 42</div>
+              </div>
+              <div class="env-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#66BB6A" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- IoT Health Progress -->
+          <div class="iot-health-section mt-3">
+            <div class="health-header-row">
+              <span class="health-title">All IoT Devices</span>
+              <span class="health-percent" id="iotOverallHealth">96% Online</span>
+            </div>
+            <div class="health-progress-track">
+              <div class="health-progress-fill" style="width: 96%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-footer-label">9. IOT / SMART SOCIETY</div>
+      </div>
+    </div>
+
+    <!-- ================= 10. ADMIN DASHBOARD ================= -->
+    <div class="screen-template" id="template-screen-10" data-title="10. ADMIN DASHBOARD">
+      <div class="screen admin-screen">
+        <div class="admin-top-header">
+          <button class="btn-burger" onclick="openToast('Admin menu drawer: Tower A, Tower B, Assets, Financials')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <h3>Admin Dashboard</h3>
+          <button class="btn-icon-badge" onclick="navigateToScreen('8')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="dot-badge"></span>
+          </button>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- 3-KPI Row -->
+          <div class="admin-kpi-row">
+            <div class="kpi-box">
+              <div class="kpi-label">Total Residents</div>
+              <div class="kpi-number">248</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">Visitors Today</div>
+              <div class="kpi-number">36</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">Pending Requests</div>
+              <div class="kpi-number text-orange">12</div>
+            </div>
+          </div>
+
+          <!-- 2-Col Stat Row -->
+          <div class="admin-stat-split mt-2">
+            <div class="stat-split-card">
+              <div class="split-label">Maintenance Collection</div>
+              <div class="split-value">₹4.8L</div>
+              <div class="split-sub">This Month</div>
+            </div>
+            <div class="stat-split-card">
+              <div class="split-label">IoT Devices Online</div>
+              <div class="split-value text-green">96%</div>
+              <div class="split-sub">
+                <span class="green-dot-pulse"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Maintenance Collection Trend Chart -->
+          <div class="admin-chart-card mt-3">
+            <div class="chart-header">
+              <h4>Overview</h4>
+              <div class="chart-subtitle">Maintenance Collection (Monthly)</div>
+            </div>
+            <div class="chart-svg-wrap">
+              <svg viewBox="0 0 300 120" class="trend-chart-svg">
+                <!-- Grid Lines -->
+                <line x1="25" y1="20" x2="290" y2="20" stroke="#1F2837" stroke-dasharray="3,3"/>
+                <line x1="25" y1="50" x2="290" y2="50" stroke="#1F2837" stroke-dasharray="3,3"/>
+                <line x1="25" y1="80" x2="290" y2="80" stroke="#1F2837" stroke-dasharray="3,3"/>
+
+                <!-- Y Axis Labels -->
+                <text x="5" y="23" fill="#6B7280" font-size="9">6L</text>
+                <text x="5" y="53" fill="#6B7280" font-size="9">4L</text>
+                <text x="5" y="83" fill="#6B7280" font-size="9">2L</text>
+                <text x="5" y="108" fill="#6B7280" font-size="9">0L</text>
+
+                <!-- Gradient Fill Under Curve -->
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#FF8A00" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#FF8A00" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M 40 85 L 85 70 L 130 75 L 175 58 L 220 62 L 265 40 L 265 105 L 40 105 Z" fill="url(#chartGrad)"/>
+                
+                <!-- Line -->
+                <path d="M 40 85 L 85 70 L 130 75 L 175 58 L 220 62 L 265 40" fill="none" stroke="#FF8A00" stroke-width="2.5" stroke-linecap="round"/>
+                
+                <!-- Dots -->
+                <circle cx="40" cy="85" r="3.5" fill="#FF8A00"/>
+                <circle cx="85" cy="70" r="3.5" fill="#FF8A00"/>
+                <circle cx="130" cy="75" r="3.5" fill="#FF8A00"/>
+                <circle cx="175" cy="58" r="3.5" fill="#FF8A00"/>
+                <circle cx="220" cy="62" r="3.5" fill="#FF8A00"/>
+                <circle cx="265" cy="40" r="4.5" fill="#FFAE33" stroke="#fff" stroke-width="1.5"/>
+
+                <!-- X Axis Labels -->
+                <text x="35" y="116" fill="#6B7280" font-size="9">Mar</text>
+                <text x="80" y="116" fill="#6B7280" font-size="9">Apr</text>
+                <text x="125" y="116" fill="#6B7280" font-size="9">May</text>
+                <text x="170" y="116" fill="#6B7280" font-size="9">Jun</text>
+                <text x="215" y="116" fill="#6B7280" font-size="9">Jul</text>
+                <text x="260" y="116" fill="#FF8A00" font-weight="bold" font-size="9">Aug</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Bottom 2-Col Analytics (Bar Chart & Donut) -->
+          <div class="admin-bottom-grid mt-3">
+            <!-- Visitor Activity Bar -->
+            <div class="analytics-mini-card">
+              <div class="analytics-title-row">
+                <span>Visitor Activity</span>
+                <span class="analytics-sub-meta">›</span>
+              </div>
+              <div class="analytics-sub">This Week</div>
+              <div class="bar-chart-flex mt-2">
+                <div class="bar-col"><div class="bar-fill" style="height: 35%;"></div></div>
+                <div class="bar-col"><div class="bar-fill" style="height: 55%;"></div></div>
+                <div class="bar-col"><div class="bar-fill" style="height: 90%;"></div></div>
+                <div class="bar-col"><div class="bar-fill" style="height: 70%;"></div></div>
+                <div class="bar-col"><div class="bar-fill" style="height: 85%;"></div></div>
+                <div class="bar-col"><div class="bar-fill highlight" style="height: 95%;"></div></div>
+                <div class="bar-col"><div class="bar-fill" style="height: 60%;"></div></div>
+              </div>
+            </div>
+
+            <!-- Complaint Resolution Donut -->
+            <div class="analytics-mini-card">
+              <div class="analytics-title-row">
+                <span>Complaint Resolution</span>
+              </div>
+              <div class="analytics-sub">This Week</div>
+              <div class="donut-wrap mt-2">
+                <svg viewBox="0 0 80 80" class="donut-svg">
+                  <circle cx="40" cy="40" r="30" fill="none" stroke="#222B3A" stroke-width="7"/>
+                  <circle cx="40" cy="40" r="30" fill="none" stroke="#FF8A00" stroke-width="7" stroke-dasharray="188.5" stroke-dashoffset="47.1" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                  <text x="40" y="45" fill="#FFFFFF" font-size="14" font-weight="bold" text-anchor="middle">75%</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-footer-label">10. ADMIN DASHBOARD</div>
+      </div>
+    </div>
+
+    <!-- ================= 11. SECURITY GUARD DASHBOARD ================= -->
+    <div class="screen-template" id="template-screen-11" data-title="11. SECURITY GUARD DASHBOARD">
+      <div class="screen security-screen">
+        <div class="security-top-header">
+          <button class="btn-back" onclick="switchRole('resident'); navigateToScreen('3');">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <div class="header-titles">
+            <div class="header-main-title">Gate Security</div>
+            <div class="header-sub-greet">Good Morning</div>
+          </div>
+          <div class="gate-badge">Gate 01</div>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- Big Action Buttons -->
+          <button class="btn-scan-visitor-qr" onclick="openQrScannerSimulator()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            SCAN VISITOR QR
+          </button>
+
+          <div class="security-quick-buttons mt-2">
+            <button class="btn-sec-outline" onclick="openRegisterVisitorGuardModal()">REGISTER VISITOR</button>
+            <button class="btn-sec-outline" onclick="openDeliveryEntryGuardModal()">DELIVERY ENTRY</button>
+          </div>
+
+          <!-- Red Big Emergency SOS -->
+          <button class="btn-guard-emergency mt-3" onclick="triggerSosEmergency()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            EMERGENCY
+          </button>
+
+          <!-- 3-KPI Guard Metrics -->
+          <div class="guard-kpi-row mt-3">
+            <div class="guard-kpi-card">
+              <div class="guard-kpi-label">Visitors Expected</div>
+              <div class="guard-kpi-num">12</div>
+            </div>
+            <div class="guard-kpi-card">
+              <div class="guard-kpi-label">Visitors Inside</div>
+              <div class="guard-kpi-num text-green">7</div>
+            </div>
+            <div class="guard-kpi-card">
+              <div class="guard-kpi-label">Pending Approvals</div>
+              <div class="guard-kpi-num text-orange">3</div>
+            </div>
+          </div>
+
+          <!-- Live Visitor Verification Section -->
+          <div class="section-heading-sm mt-3">Live Visitor Verification</div>
+          <div class="guard-visitor-card mt-2">
+            <div class="guard-visitor-avatar">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="Amit Sharma">
+            </div>
+            <div class="guard-visitor-info">
+              <div class="visitor-name-title">Amit Sharma</div>
+              <div class="visitor-flat-assigned">Flat A-204</div>
+              <div class="visitor-sub-desc">Personal Guest</div>
+              <div class="visitor-arrival-stamp">Arrival: 11:02 AM</div>
+            </div>
+            <div class="guard-action-col">
+              <span class="tag-awaiting">Awaiting</span>
+              <button class="btn-checkin-guard mt-2" onclick="handleGuardCheckIn(this)">Allow Entry</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Guard Bottom Nav -->
+        <nav class="bottom-nav">
+          <button class="nav-item active" onclick="navigateToScreen('11')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-item" onclick="navigateToScreen('4')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span>Visitors</span>
+          </button>
+          <button class="nav-item" onclick="openToast('Gate 01 Delivery Log loaded')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            <span>Deliveries</span>
+          </button>
+          <button class="nav-item" onclick="navigateToScreen('12')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <span>More</span>
+          </button>
+        </nav>
+        <div class="screen-footer-label">11. SECURITY GUARD DASHBOARD</div>
+      </div>
+    </div>
+
+    <!-- ================= 12. PROFILE SCREEN ================= -->
+    <div class="screen-template" id="template-screen-12" data-title="12. PROFILE SCREEN">
+      <div class="screen profile-screen">
+        <div class="subpage-header">
+          <h3 class="profile-title">Profile</h3>
+          <button class="btn-header-action" onclick="openToast('Opening App Settings')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </button>
+        </div>
+
+        <div class="screen-scroll-content">
+          <!-- Profile Card -->
+          <div class="profile-resident-hero">
+            <div class="hero-avatar-box">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80" alt="Shivani">
+            </div>
+            <div class="hero-meta">
+              <h4 class="resident-fullname">Shivani Gudekar</h4>
+              <p class="resident-flat-role">Flat A-204 • Resident</p>
+            </div>
+          </div>
+
+          <!-- Section 1: Resident Management -->
+          <div class="profile-menu-group">
+            <div class="menu-item" onclick="openToast('Viewing Personal Information')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+              <span class="menu-label">Personal Information</span>
+              <span class="menu-chevron">›</span>
+            </div>
+
+            <div class="menu-item" onclick="openToast('Tower A, 2nd Floor, 3BHK flat specifications')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></div>
+              <span class="menu-label">My Flat</span>
+              <span class="menu-chevron">›</span>
+            </div>
+
+            <div class="menu-item" onclick="openToast('Registered 3 family members')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+              <span class="menu-label">Family Members</span>
+              <span class="menu-chevron">›</span>
+            </div>
+
+            <div class="menu-item" onclick="openToast('Vehicles: MH-12-AB-4567 (Car slot P-14)')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
+              <span class="menu-label">Vehicles</span>
+              <span class="menu-chevron">›</span>
+            </div>
+
+            <div class="menu-item" onclick="openToast('Emergency contacts: Society Guard, Ambulance, Fire')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+              <span class="menu-label">Emergency Contacts</span>
+              <span class="menu-chevron">›</span>
+            </div>
+          </div>
+
+          <!-- Section 2: Preferences -->
+          <div class="profile-menu-group mt-3">
+            <div class="menu-item" onclick="openToast('Preferences updated')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg></div>
+              <span class="menu-label">Preferences</span>
+              <span class="menu-chevron">›</span>
+            </div>
+
+            <div class="menu-item" onclick="openToast('Push Notifications: Enabled for Visitor Entry & Maintenance')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+              <span class="menu-label">Notifications</span>
+              <span class="menu-chevron">›</span>
+            </div>
+
+            <div class="menu-item" onclick="openToast('2FA Biometric Authentication active')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+              <span class="menu-label">Privacy & Security</span>
+              <span class="menu-chevron">›</span>
+            </div>
+          </div>
+
+          <!-- Section 3: Support -->
+          <div class="profile-menu-group mt-3">
+            <div class="menu-item" onclick="openToast('ResiSync 24/7 Help Desk: help@resisync.io')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+              <span class="menu-label">Help Center</span>
+              <span class="menu-chevron">›</span>
+            </div>
+
+            <div class="menu-item" onclick="openToast('Calling Resident Welfare Association (RWA) Office...')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+              <span class="menu-label">Contact Society</span>
+              <span class="menu-chevron">›</span>
+            </div>
+
+            <div class="menu-item" onclick="openToast('ResiSync Mobile v2.4.0 (Enterprise IoT Build)')">
+              <div class="menu-icon-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+              <span class="menu-label">About ResiSync</span>
+              <span class="menu-chevron">›</span>
+            </div>
+          </div>
+
+          <!-- Danger Logout -->
+          <div class="logout-wrap mt-3 mb-4">
+            <button class="btn-logout" onclick="handleLogout()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Log Out
+            </button>
+          </div>
+        </div>
+
+        <!-- App Bottom Nav Bar -->
+        <nav class="bottom-nav">
+          <button class="nav-item" onclick="navigateToScreen('3')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-item" onclick="navigateToScreen('9')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <span>Services</span>
+          </button>
+          <button class="nav-item" onclick="navigateToScreen('8')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span>Alerts</span>
+          </button>
+          <button class="nav-item active" onclick="navigateToScreen('12')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Profile</span>
+          </button>
+        </nav>
+        <div class="screen-footer-label">12. PROFILE SCREEN</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= INTERACTIVE MODALS ================= -->
+
+  <!-- Modal 1: Payment Checkout Gateway -->
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>Pay Society Maintenance</h4>
+        <button class="btn-close-modal" onclick="closeModal('paymentModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="bill-summary-banner">
+          <div class="bill-title">ResiSync Smart Billing</div>
+          <div class="bill-large-amt">₹3,500.00</div>
+          <div class="bill-flat-info">Flat A-204 • August 2026 Invoice</div>
+        </div>
+
+        <div class="payment-methods-list">
+          <label class="pay-method-row">
+            <input type="radio" name="paymethod" checked>
+            <div class="pay-method-info">
+              <span class="pay-name">UPI / QR (Google Pay, PhonePe, Paytm)</span>
+              <span class="pay-desc">Instant zero fee settlement</span>
+            </div>
+          </label>
+          <label class="pay-method-row">
+            <input type="radio" name="paymethod">
+            <div class="pay-method-info">
+              <span class="pay-name">Credit / Debit Card</span>
+              <span class="pay-desc">Visa, Mastercard, RuPay</span>
+            </div>
+          </label>
+          <label class="pay-method-row">
+            <input type="radio" name="paymethod">
+            <div class="pay-method-info">
+              <span class="pay-name">Net Banking</span>
+              <span class="pay-desc">All Indian Banks</span>
+            </div>
+          </label>
+        </div>
+
+        <button class="btn-primary btn-block mt-4" onclick="processPayment()">Confirm & Pay ₹3,500</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Payment Receipt Modal -->
+  <div class="modal-backdrop" id="receiptModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>Maintenance Receipt</h4>
+        <button class="btn-close-modal" onclick="closeModal('receiptModal')">✕</button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="receipt-success-badge">✓</div>
+        <h3 class="receipt-society-name">Grand Palm Heights CHS</h3>
+        <p class="receipt-id-sub">Transaction ID: TXN-RS89247192</p>
+
+        <div class="receipt-breakup-box">
+          <div class="rcpt-row"><span>Billing Month:</span> <strong id="rcptDate">08 Jul 2026</strong></div>
+          <div class="rcpt-row"><span>Resident:</span> <strong>Shivani Gudekar (A-204)</strong></div>
+          <div class="rcpt-row"><span>Amount Paid:</span> <strong class="text-green" id="rcptAmt">₹3,500.00</strong></div>
+          <div class="rcpt-row"><span>Payment Status:</span> <strong class="text-green" id="rcptStatus">PAID</strong></div>
+          <div class="rcpt-row"><span>Payment Mode:</span> <strong>UPI Auto-Pay</strong></div>
+        </div>
+
+        <button class="btn-secondary-outline btn-block mt-3" onclick="downloadReceiptPdf()">Download PDF Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Invite Visitor Modal -->
+  <div class="modal-backdrop" id="inviteVisitorModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>+ Invite New Visitor</h4>
+        <button class="btn-close-modal" onclick="closeModal('inviteVisitorModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleInviteVisitorSubmit(event)">
+          <div class="form-group mb-2">
+            <label class="form-label">Visitor Full Name</label>
+            <input type="text" id="visitorNameInput" class="form-control" placeholder="e.g. Rahul Patil" required>
+          </div>
+          <div class="form-group mb-2">
+            <label class="form-label">Visitor Mobile Number</label>
+            <input type="tel" id="visitorPhoneInput" class="form-control" placeholder="+91 98765 43210" required>
+          </div>
+          <div class="form-group mb-2">
+            <label class="form-label">Visitor Purpose</label>
+            <select id="visitorPurposeSelect" class="form-control">
+              <option value="Personal Guest">Personal Guest</option>
+              <option value="Delivery">Food / Package Delivery</option>
+              <option value="Service Provider">Home Maintenance / Maid</option>
+              <option value="Cab / Ride">Cab / Ride Entry</option>
+            </select>
+          </div>
+          <div class="form-group mb-3">
+            <label class="form-label">Expected Date & Time</label>
+            <input type="datetime-local" id="visitorTimeInput" class="form-control" value="2026-08-10T14:00" required>
+          </div>
+
+          <button type="submit" class="btn-primary btn-block">Generate Visitor Pass & QR</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: QR Pass View Modal -->
+  <div class="modal-backdrop" id="qrModal">
+    <div class="modal-card text-center">
+      <div class="modal-header">
+        <h4>ResiSync Digital Gate Pass</h4>
+        <button class="btn-close-modal" onclick="closeModal('qrModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="qr-canvas-wrap">
+          <svg viewBox="0 0 160 160" width="160" height="160" class="qr-code-svg">
+            <rect width="160" height="160" fill="#ffffff" rx="12"/>
+            <!-- Custom QR Pattern SVG -->
+            <rect x="20" y="20" width="40" height="40" fill="#0D1117"/>
+            <rect x="26" y="26" width="28" height="28" fill="#ffffff"/>
+            <rect x="32" y="32" width="16" height="16" fill="#0D1117"/>
+
+            <rect x="100" y="20" width="40" height="40" fill="#0D1117"/>
+            <rect x="106" y="26" width="28" height="28" fill="#ffffff"/>
+            <rect x="112" y="32" width="16" height="16" fill="#0D1117"/>
+
+            <rect x="20" y="100" width="40" height="40" fill="#0D1117"/>
+            <rect x="26" y="106" width="28" height="28" fill="#ffffff"/>
+            <rect x="32" y="112" width="16" height="16" fill="#0D1117"/>
+
+            <!-- Data Bits Pattern -->
+            <rect x="70" y="20" width="10" height="20" fill="#FF8A00"/>
+            <rect x="70" y="50" width="20" height="10" fill="#0D1117"/>
+            <rect x="20" y="70" width="20" height="10" fill="#0D1117"/>
+            <rect x="50" y="70" width="60" height="20" fill="#FF8A00"/>
+            <rect x="120" y="70" width="20" height="20" fill="#0D1117"/>
+            <rect x="70" y="100" width="20" height="20" fill="#0D1117"/>
+            <rect x="100" y="100" width="40" height="10" fill="#FF8A00"/>
+            <rect x="100" y="120" width="20" height="20" fill="#0D1117"/>
+            <rect x="130" y="120" width="10" height="20" fill="#FF8A00"/>
+          </svg>
+        </div>
+        <h4 class="mt-2" id="qrPassName">Shivani Gudekar</h4>
+        <p class="qr-sub-text" id="qrPassFlat">Flat A-204 • Fast Gate Verification</p>
+        <span class="badge-valid-pass">VALID TILL 10 AUG 2026, 11:59 PM</span>
+        <button class="btn-secondary-outline btn-block mt-3" onclick="openToast('QR Pass link copied to clipboard & SMS sent')">Share Pass Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Amenity Booking Modal -->
+  <div class="modal-backdrop" id="amenityModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4 id="amenityModalTitle">Book Amenity</h4>
+        <button class="btn-close-modal" onclick="closeModal('amenityModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleAmenityBookingSubmit(event)">
+          <div class="form-group mb-2">
+            <label class="form-label">Booking Date</label>
+            <input type="date" id="amenityDateInput" class="form-control" value="2026-08-11" required>
+          </div>
+          <div class="form-group mb-2">
+            <label class="form-label">Select Slot</label>
+            <div class="slot-picker-grid">
+              <button type="button" class="slot-btn active" onclick="selectSlot(this)">06:00 AM - 07:30 AM</button>
+              <button type="button" class="slot-btn" onclick="selectSlot(this)">08:00 AM - 09:30 AM</button>
+              <button type="button" class="slot-btn" onclick="selectSlot(this)">05:00 PM - 06:30 PM</button>
+              <button type="button" class="slot-btn" onclick="selectSlot(this)">07:00 PM - 08:30 PM</button>
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label class="form-label">Number of Guests</label>
+            <input type="number" class="form-control" min="1" max="10" value="2">
+          </div>
+
+          <button type="submit" class="btn-primary btn-block">Confirm Reservation</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Raise Helpdesk Ticket Modal -->
+  <div class="modal-backdrop" id="ticketModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h4>+ Raise Helpdesk Request</h4>
+        <button class="btn-close-modal" onclick="closeModal('ticketModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleRaiseTicketSubmit(event)">
+          <div class="form-group mb-2">
+            <label class="form-label">Category</label>
+            <select id="ticketCategorySelect" class="form-control">
+              <option value="Plumbing">Plumbing</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Cleaning">Cleaning / Housekeeping</option>
+              <option value="Security">Security / Intercom</option>
+              <option value="Maintenance">Carpentry / Civil</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group mb-2">
+            <label class="form-label">Issue Title / Description</label>
+            <textarea id="ticketDescInput" class="form-control" rows="3" placeholder="Describe the issue in your flat or common area..." required></textarea>
+          </div>
+          <div class="form-group mb-3">
+            <label class="form-label">Preferred Technician Visit Time</label>
+            <select class="form-control">
+              <option>Morning (10:00 AM - 01:00 PM)</option>
+              <option>Afternoon (02:00 PM - 05:00 PM)</option>
+              <option>Evening (05:00 PM - 08:00 PM)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary btn-block">Submit Ticket to RWA Desk</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Emergency SOS Trigger Banner -->
+  <div class="modal-backdrop" id="sosModal">
+    <div class="modal-card sos-card text-center">
+      <div class="sos-siren-animation">🚨</div>
+      <h3 class="sos-title">EMERGENCY ASSISTANCE TRIGGERED</h3>
+      <p class="sos-desc">Broadcasting high-priority SOS alert to Gate Security, Society Admin, and Emergency Services.</p>
+
+      <div class="sos-timer-box">
+        <span class="sos-countdown" id="sosCount">3</span>
+        <span class="sos-timer-sub">seconds to cancel siren</span>
+      </div>
+
+      <div class="sos-actions-row mt-3">
+        <button class="btn-cancel-sos" onclick="cancelSos()">Cancel Alert</button>
+        <button class="btn-call-guard" onclick="openToast('Direct Intercom Connected to Main Gate Guard')">📞 Intercom Gate 1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Toast Notification Banner -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
