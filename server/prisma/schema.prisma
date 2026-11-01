@@ -1,0 +1,372 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  phone     String
+  name      String
+  password  String
+  role      String   @default("RESIDENT") // RESIDENT, SECURITY, ADMIN
+  flatId    String?
+  avatarUrl String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  flat              Flat?              @relation(fields: [flatId], references: [id], onDelete: SetNull)
+  residentProfile   ResidentProfile?
+  familyMembers     FamilyMember[]
+  vehicles          Vehicle[]
+  complaints        Complaint[]
+  amenityBookings   AmenityBooking[]
+  maintenanceBills  MaintenanceBill[]
+  invitedVisitors   Visitor[]          @relation("ResidentVisitors")
+  notifications     Notification[]
+  emergencyRequests EmergencyRequest[]
+}
+
+model Society {
+  id          String   @id @default(uuid())
+  name        String
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  totalFlats  Int      @default(120)
+  societyCode String   @unique
+  createdAt   DateTime @default(now())
+
+  buildings         Building[]
+  flats             Flat[]
+  visitors          Visitor[]
+  deliveries        Delivery[]
+  amenities         Amenity[]
+  complaints        Complaint[]
+  announcements     Announcement[]
+  emergencyRequests EmergencyRequest[]
+  ioTDevices        IoTDevice[]
+  auditLogs         AuditLog[]
+  maintenanceBills  MaintenanceBill[]
+}
+
+model Building {
+  id          String  @id @default(uuid())
+  name        String // e.g. "Tower A", "Tower B"
+  societyId   String
+  totalFloors Int     @default(14)
+  society     Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  flats       Flat[]
+}
+
+model Flat {
+  id          String @id @default(uuid())
+  flatNumber  String // e.g. "A-402", "B-101"
+  floorNumber Int    @default(4)
+  buildingId  String
+  societyId   String
+  status      String @default("OCCUPIED") // OCCUPIED, VACANT
+  bhkType     String @default("3 BHK")
+  sqFt        Int    @default(1550)
+
+  building          Building           @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  society           Society            @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  users             User[]
+  residentProfiles  ResidentProfile[]
+  visitors          Visitor[]
+  deliveries        Delivery[]
+  maintenanceBills  MaintenanceBill[]
+  complaints        Complaint[]
+  amenityBookings   AmenityBooking[]
+  emergencyRequests EmergencyRequest[]
+}
+
+model ResidentProfile {
+  id                    String    @id @default(uuid())
+  userId                String    @unique
+  flatId                String
+  occupancyType         String    @default("OWNER") // OWNER, TENANT
+  moveInDate            DateTime?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flat Flat @relation(fields: [flatId], references: [id], onDelete: Cascade)
+}
+
+model FamilyMember {
+  id       String  @id @default(uuid())
+  userId   String
+  name     String
+  relation String // Spouse, Son, Daughter, Parent, Sibling, Other
+  phone    String?
+  age      Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Vehicle {
+  id            String  @id @default(uuid())
+  userId        String
+  vehicleType   String // TWO_WHEELER, FOUR_WHEELER, EV
+  vehicleNumber String
+  parkingSlot   String
+  makeModel     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Visitor {
+  id                  String    @id @default(uuid())
+  societyId           String
+  flatId              String
+  invitedById         String?
+  name                String
+  phone               String
+  visitorType         String    @default("GUEST") // GUEST, DELIVERY, CAB, SERVICE, OTHER
+  vehicleNumber       String?
+  expectedAt          DateTime
+  status              String    @default("EXPECTED") // EXPECTED, APPROVED, REJECTED, CHECKED_IN, CHECKED_OUT, CANCELLED
+  purpose             String?
+  notes               String?
+  passCode            String    @unique // 6-digit code e.g. "829410"
+  qrToken             String    @unique // Secure uuid token
+  checkInTime         DateTime?
+  checkOutTime        DateTime?
+  checkedInByGuardId  String?
+  checkedOutByGuardId String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  society   Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  flat      Flat    @relation(fields: [flatId], references: [id], onDelete: Cascade)
+  invitedBy User?   @relation("ResidentVisitors", fields: [invitedById], references: [id], onDelete: SetNull)
+}
+
+model Delivery {
+  id                 String    @id @default(uuid())
+  societyId          String
+  flatId             String
+  company            String // Amazon, Flipkart, Swiggy, Zomato, BlueDart, Other
+  trackingNumber     String?
+  deliveryPersonName String?
+  phone              String?
+  status             String    @default("AT_GATE") // AT_GATE, COLLECTED, RETURNED
+  gateEntryTime      DateTime  @default(now())
+  collectedTime      DateTime?
+  guardId            String?
+
+  society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  flat    Flat    @relation(fields: [flatId], references: [id], onDelete: Cascade)
+}
+
+model MaintenanceBill {
+  id            String    @id @default(uuid())
+  societyId     String
+  flatId        String
+  userId        String?
+  billNumber    String    @unique
+  billingMonth  String // e.g. "November 2026"
+  billingYear   Int       @default(2026)
+  dueDate       DateTime
+  totalAmount   Float
+  status        String    @default("PENDING") // PENDING, PAID, OVERDUE, FAILED
+  paidAt        DateTime?
+  paymentMethod String? // UPI, CARD, NETBANKING, CASH, CHEQUE
+  transactionId String?
+  receiptUrl    String?
+  createdAt     DateTime  @default(now())
+
+  society  Society    @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  flat     Flat       @relation(fields: [flatId], references: [id], onDelete: Cascade)
+  user     User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items    BillItem[]
+  payments Payment[]
+}
+
+model BillItem {
+  id       String          @id @default(uuid())
+  billId   String
+  title    String
+  amount   Float
+  category String // MAINTENANCE, WATER, PARKING, SINKING_FUND, DIESEL_GENSET, OTHER
+  bill     MaintenanceBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id              String          @id @default(uuid())
+  billId          String
+  amount          Float
+  status          String          @default("SUCCESS") // SUCCESS, PENDING, FAILED
+  method          String
+  transactionRef  String          @unique
+  gatewayResponse String?
+  paidAt          DateTime        @default(now())
+  bill            MaintenanceBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+}
+
+model Amenity {
+  id                  String   @id @default(uuid())
+  societyId           String
+  name                String
+  category            String // CLUBHOUSE, POOL, GYM, HALL, SPORTS, GARDEN
+  description         String
+  capacity            Int      @default(20)
+  openTime            String   @default("06:00")
+  closeTime           String   @default("22:00")
+  slotDurationMinutes Int      @default(60)
+  pricing             Float    @default(0) // ₹ per slot (0 = free for residents)
+  imageUrl            String
+  rules               String?
+  status              String   @default("AVAILABLE") // AVAILABLE, MAINTENANCE
+  createdAt           DateTime @default(now())
+
+  society  Society          @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  bookings AmenityBooking[]
+}
+
+model AmenityBooking {
+  id            String   @id @default(uuid())
+  amenityId     String
+  userId        String
+  flatId        String
+  bookingDate   String // YYYY-MM-DD
+  startTime     String // HH:mm
+  endTime       String // HH:mm
+  guestsCount   Int      @default(1)
+  status        String   @default("CONFIRMED") // CONFIRMED, CANCELLED, COMPLETED
+  totalFee      Float    @default(0)
+  paymentStatus String   @default("PAID")
+  createdAt     DateTime @default(now())
+
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flat    Flat    @relation(fields: [flatId], references: [id], onDelete: Cascade)
+}
+
+model Complaint {
+  id                String    @id @default(uuid())
+  ticketNumber      String    @unique // e.g. "RES-7821"
+  societyId         String
+  flatId            String
+  userId            String
+  category          String // PLUMBING, ELECTRICAL, CLEANING, SECURITY, MAINTENANCE, OTHER
+  subject           String
+  description       String
+  priority          String    @default("MEDIUM") // LOW, MEDIUM, HIGH, EMERGENCY
+  status            String    @default("OPEN") // OPEN, ASSIGNED, IN_PROGRESS, RESOLVED, REOPENED
+  assignedStaffName String?
+  resolutionNotes   String?
+  resolvedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  society  Society            @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  flat     Flat               @relation(fields: [flatId], references: [id], onDelete: Cascade)
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments ComplaintComment[]
+}
+
+model ComplaintComment {
+  id          String   @id @default(uuid())
+  complaintId String
+  userId      String
+  authorName  String
+  authorRole  String
+  message     String
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id         String   @id @default(uuid())
+  societyId  String
+  title      String
+  content    String
+  category   String   @default("GENERAL") // URGENT, IMPORTANT, GENERAL, EVENT, MAINTENANCE
+  isPinned   Boolean  @default(false)
+  authorName String
+  createdAt  DateTime @default(now())
+
+  society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("GENERAL") // VISITOR, MAINTENANCE, AMENITY, COMPLAINT, EMERGENCY, ANNOUNCEMENT
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmergencyRequest {
+  id            String    @id @default(uuid())
+  societyId     String
+  flatId        String
+  userId        String
+  residentName  String
+  residentPhone String
+  flatNumber    String
+  emergencyType String    @default("SECURITY") // MEDICAL, FIRE, SECURITY, OTHER
+  status        String    @default("ACTIVE") // ACTIVE, RESOLVED
+  note          String?
+  resolvedBy    String?
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  flat    Flat    @relation(fields: [flatId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IoTDevice {
+  id            String   @id @default(uuid())
+  societyId     String
+  name          String
+  deviceType    String // WATER_TANK, POWER_GRID, GATE_CAMERA, PARKING_SENSOR, AIR_QUALITY, DG_GENSET
+  location      String
+  status        String   @default("ONLINE") // ONLINE, OFFLINE, WARNING
+  batteryLevel  Int?
+  lastHeartbeat DateTime @default(now())
+
+  society  Society         @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  readings SensorReading[]
+}
+
+model SensorReading {
+  id          String   @id @default(uuid())
+  deviceId    String
+  sensorType  String
+  metricValue Float
+  unit        String
+  status      String   @default("NORMAL") // NORMAL, WARNING, CRITICAL
+  recordedAt  DateTime @default(now())
+
+  device IoTDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  societyId  String
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  details    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+}
