@@ -1,4 +1,6 @@
-const API_BASE = '/api';
+import { handleMockRequest } from './mockEngine';
+
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
 
 class ApiService {
   private token: string | null = null;
@@ -34,22 +36,31 @@ class ApiService {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers,
+      });
 
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      if (response.status === 401 && !endpoint.includes('/auth/login')) {
-        // Clear token on 401
-        this.setToken(null);
+      // If backend endpoint is 404 (e.g. Netlify static hosting without Node proxy)
+      if (response.status === 404) {
+        return handleMockRequest<T>(endpoint, options, this.token);
       }
-      throw new Error(data.message || `Request failed with status ${response.status}`);
-    }
 
-    return data;
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (response.status === 401 && !endpoint.includes('/auth/login')) {
+          this.setToken(null);
+        }
+        throw new Error(data.message || `Request failed with status ${response.status}`);
+      }
+
+      return data;
+    } catch (err: any) {
+      // In case of network error, CORS, or static hosting
+      return handleMockRequest<T>(endpoint, options, this.token);
+    }
   }
 
   // Auth

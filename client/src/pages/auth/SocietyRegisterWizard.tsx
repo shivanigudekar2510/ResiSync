@@ -654,3 +654,4 @@ export const SocietyRegisterWizard: React.FC = () => {
     </div>
   );
 };
+
