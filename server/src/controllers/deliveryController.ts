@@ -23,7 +23,7 @@ export const createDelivery = async (req: AuthRequest, res: Response, next: Next
       return;
     }
 
-    const flat = await prisma.flat.findFirst({
+    let flat = await prisma.flat.findFirst({
       where: {
         societyId,
         flatNumber: data.flatNumber.toUpperCase().trim(),
@@ -34,6 +34,19 @@ export const createDelivery = async (req: AuthRequest, res: Response, next: Next
         },
       },
     });
+
+    if (!flat) {
+      flat = await prisma.flat.findFirst({
+        where: {
+          flatNumber: data.flatNumber.toUpperCase().trim(),
+        },
+        include: {
+          users: {
+            where: { role: 'RESIDENT' },
+          },
+        },
+      });
+    }
 
     if (!flat) {
       res.status(404).json({ success: false, message: `Flat ${data.flatNumber} not found` });

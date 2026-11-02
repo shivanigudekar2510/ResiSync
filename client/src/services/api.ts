@@ -42,8 +42,18 @@ class ApiService {
         headers,
       });
 
-      // If backend endpoint is 404 (e.g. Netlify static hosting without Node proxy)
-      if (response.status === 404) {
+      const contentType = response.headers.get('content-type') || '';
+
+      // If backend endpoint is 404, 405 (Netlify static host without backend proxy),
+      // 502/503 (upstream server offline), OR if Netlify's SPA rewrite returned index.html for an API route
+      if (
+        response.status === 404 ||
+        response.status === 405 ||
+        response.status === 502 ||
+        response.status === 503 ||
+        contentType.includes('text/html') ||
+        contentType.includes('text/plain')
+      ) {
         return handleMockRequest<T>(endpoint, options, this.token);
       }
 
@@ -54,6 +64,11 @@ class ApiService {
           this.setToken(null);
         }
         throw new Error(data.message || `Request failed with status ${response.status}`);
+      }
+
+      // If the response is unexpectedly empty (e.g. static hosting returning empty 200)
+      if (typeof data === 'object' && Object.keys(data).length === 0) {
+        return handleMockRequest<T>(endpoint, options, this.token);
       }
 
       return data;

@@ -12,6 +12,9 @@ const STORAGE_KEYS = {
   ANNOUNCEMENTS: 'resisync_mock_announcements',
   EMERGENCIES: 'resisync_mock_emergencies',
   FIREBASE: 'resisync_mock_firebase',
+  NOTIFICATIONS: 'resisync_mock_notifications',
+  FLATS: 'resisync_mock_flats',
+  AUDIT_LOGS: 'resisync_mock_audit_logs',
 };
 
 function getStored<T>(key: string, defaultValue: T): T {
@@ -701,9 +704,265 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     } as any);
   }
 
+  // ================= 12. NOTIFICATIONS =================
+  if (endpoint.startsWith('/notifications')) {
+    const defaultNotifs: any[] = [
+      {
+        id: 'notif-01',
+        title: 'Visitor Pass Approved',
+        message: 'Security gate verified guest Aarush Patel for Flat A-402.',
+        type: 'VISITOR',
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+      },
+      {
+        id: 'notif-02',
+        title: 'Maintenance Bill Generated',
+        message: 'Q4 Society Maintenance bill for ₹4,200 is due on Nov 15.',
+        type: 'MAINTENANCE',
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      },
+      {
+        id: 'notif-03',
+        title: 'Scheduled Amenity Maintenance',
+        message: 'Clubhouse gym equipment calibration completed.',
+        type: 'SYSTEM',
+        isRead: true,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+      },
+    ];
+
+    let notifs = getStored(STORAGE_KEYS.NOTIFICATIONS, defaultNotifs);
+
+    if (endpoint.includes('/read')) {
+      const notifId = endpoint.split('/')[2];
+      notifs = notifs.map((n: any) => (n.id === notifId ? { ...n, isRead: true } : n));
+      setStored(STORAGE_KEYS.NOTIFICATIONS, notifs);
+      return Promise.resolve({ success: true } as any);
+    }
+
+    const unreadCount = notifs.filter((n: any) => !n.isRead).length;
+    return Promise.resolve({
+      success: true,
+      unreadCount,
+      notifications: notifs,
+    } as any);
+  }
+
+  // ================= 13. DELIVERIES =================
+  if (endpoint.startsWith('/deliveries')) {
+    const defaultDeliveries: any[] = [
+      {
+        id: 'del-01',
+        company: 'Amazon Prime',
+        trackingNumber: 'AMZ-IN-889021',
+        deliveryPersonName: 'Kishore Kumar',
+        phone: '+91 98334 11223',
+        status: 'AT_GATE',
+        createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+        flat: { flatNumber: 'A-402' },
+      },
+      {
+        id: 'del-02',
+        company: 'Blinkit Express',
+        trackingNumber: 'BLK-4421',
+        deliveryPersonName: 'Sunil Rao',
+        phone: '+91 98441 55667',
+        status: 'COLLECTED',
+        createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+        flat: { flatNumber: 'B-104' },
+      },
+    ];
+
+    let deliveries = getStored(STORAGE_KEYS.DELIVERIES, defaultDeliveries);
+
+    if (method === 'POST') {
+      const newDel = {
+        id: `del-${Date.now().toString(36)}`,
+        company: body.company || 'Courier Delivery',
+        trackingNumber: body.trackingNumber || `PKG-${Date.now().toString().slice(-6)}`,
+        deliveryPersonName: body.deliveryPersonName || 'Courier Partner',
+        phone: body.phone || '+91 98000 00000',
+        status: 'AT_GATE',
+        createdAt: new Date().toISOString(),
+        flat: { flatNumber: body.flatNumber || 'A-402' },
+      };
+      deliveries = [newDel, ...deliveries];
+      setStored(STORAGE_KEYS.DELIVERIES, deliveries);
+      return Promise.resolve({
+        success: true,
+        delivery: newDel,
+        message: 'Delivery recorded and resident notified successfully.',
+      } as any);
+    }
+
+    return Promise.resolve({
+      success: true,
+      deliveries,
+    } as any);
+  }
+
+  // ================= 14. EMERGENCY & SOS =================
+  if (endpoint.startsWith('/emergency')) {
+    const defaultEmergencies: any[] = [
+      {
+        id: 'emg-01',
+        emergencyType: 'MEDICAL',
+        residentName: 'Rahul Sharma',
+        residentPhone: '+91 98765 43210',
+        flatNumber: 'A-402',
+        status: 'RESOLVED',
+        note: 'First aid dispatch requested for sprained ankle.',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+        resolvedAt: new Date(Date.now() - 1000 * 60 * 60 * 47).toISOString(),
+      },
+    ];
+
+    let emergencies = getStored(STORAGE_KEYS.EMERGENCIES, defaultEmergencies);
+
+    if (endpoint === '/emergency/contacts') {
+      return Promise.resolve({
+        success: true,
+        contacts: [
+          { role: 'Main Gate Security Guard Desk', name: 'Vikram Singh', phone: '+91 98111 22334', priority: 1 },
+          { role: 'Estate Manager / Society Office', name: 'Priya Patel', phone: '+91 98222 33445', priority: 2 },
+          { role: 'Local Police Control Room', name: 'City Police HQ', phone: '100 / 112', priority: 3 },
+          { role: 'Nearest Trauma & Ambulance', name: 'Manipal Hospital ER', phone: '108 / +91 80 2222 1111', priority: 4 },
+          { role: 'Fire & Rescue Station', name: 'State Fire Services', phone: '101', priority: 5 },
+        ],
+      } as any);
+    }
+
+    if (endpoint === '/emergency/sos' && method === 'POST') {
+      const newEmg = {
+        id: `emg-${Date.now().toString(36)}`,
+        emergencyType: body.emergencyType || 'SECURITY',
+        residentName: 'Rahul Sharma',
+        residentPhone: '+91 98765 43210',
+        flatNumber: 'A-402',
+        status: 'ACTIVE',
+        note: body.note || 'Emergency SOS alarm triggered from mobile web application.',
+        createdAt: new Date().toISOString(),
+      };
+      emergencies = [newEmg, ...emergencies];
+      setStored(STORAGE_KEYS.EMERGENCIES, emergencies);
+      return Promise.resolve({
+        success: true,
+        message: '🚨 Emergency SOS alert activated. Gate security desk and management notified immediately.',
+        emergency: newEmg,
+        verifiedDelivery: true,
+      } as any);
+    }
+
+    if (endpoint.includes('/resolve') && method === 'POST') {
+      const emgId = endpoint.split('/')[2];
+      emergencies = emergencies.map((e: any) =>
+        e.id === emgId ? { ...e, status: 'RESOLVED', resolvedAt: new Date().toISOString() } : e
+      );
+      setStored(STORAGE_KEYS.EMERGENCIES, emergencies);
+      return Promise.resolve({
+        success: true,
+        message: 'Emergency status updated to resolved.',
+      } as any);
+    }
+
+    return Promise.resolve({
+      success: true,
+      emergencies,
+    } as any);
+  }
+
+  // ================= 15. ADMIN FLATS, RESIDENTS, AUDIT LOGS =================
+  if (endpoint === '/admin/flats') {
+    const defaultFlats: any[] = [
+      { id: 'flat-a-101', flatNumber: 'A-101', floorNumber: 1, bhkType: '2 BHK', sqFt: 1150, status: 'OCCUPIED' },
+      { id: 'flat-a-202', flatNumber: 'A-202', floorNumber: 2, bhkType: '3 BHK', sqFt: 1450, status: 'OCCUPIED' },
+      { id: 'flat-a-303', flatNumber: 'A-303', floorNumber: 3, bhkType: '3 BHK', sqFt: 1450, status: 'OCCUPIED' },
+      { id: 'flat-a-402', flatNumber: 'A-402', floorNumber: 4, bhkType: '3 BHK', sqFt: 1600, status: 'OCCUPIED' },
+      { id: 'flat-b-101', flatNumber: 'B-101', floorNumber: 1, bhkType: '2 BHK', sqFt: 1150, status: 'VACANT' },
+      { id: 'flat-b-201', flatNumber: 'B-201', floorNumber: 2, bhkType: '3 BHK', sqFt: 1450, status: 'OCCUPIED' },
+      { id: 'flat-c-101', flatNumber: 'C-101', floorNumber: 1, bhkType: '4 BHK Penthouse', sqFt: 2400, status: 'OCCUPIED' },
+    ];
+    let flats = getStored(STORAGE_KEYS.FLATS, defaultFlats);
+
+    if (method === 'POST') {
+      const newFlat = {
+        id: `flat-${Date.now().toString(36)}`,
+        flatNumber: body.flatNumber?.toUpperCase() || 'A-501',
+        floorNumber: Number(body.floorNumber) || 5,
+        bhkType: body.bhkType || '3 BHK',
+        sqFt: Number(body.sqFt) || 1400,
+        status: body.status || 'VACANT',
+      };
+      flats = [...flats, newFlat];
+      setStored(STORAGE_KEYS.FLATS, flats);
+      return Promise.resolve({ success: true, message: 'Flat created', flat: newFlat } as any);
+    }
+
+    return Promise.resolve({ success: true, count: flats.length, flats } as any);
+  }
+
+  if (endpoint === '/admin/residents') {
+    const users = getStored(STORAGE_KEYS.USERS, DEFAULT_USERS);
+    const residents = users.filter((u: any) => u.role === 'RESIDENT');
+    return Promise.resolve({ success: true, count: residents.length, residents } as any);
+  }
+
+  if (endpoint === '/admin/audit-logs') {
+    const defaultLogs: any[] = [
+      { id: 'log-01', action: 'VISITOR_CHECK_IN', entity: 'VisitorPass', entityId: 'VP-8921', userEmail: 'guard@resisync.com', createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString() },
+      { id: 'log-02', action: 'FIREBASE_TELEMETRY_SYNC', entity: 'CloudSync', entityId: 'sync-prod', userEmail: 'admin@resisync.com', createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString() },
+      { id: 'log-03', action: 'MAINTENANCE_PAYMENT_PROCESSED', entity: 'Bill', entityId: 'BILL-402', userEmail: 'resident@resisync.com', createdAt: new Date(Date.now() - 1000 * 60 * 80).toISOString() },
+      { id: 'log-04', action: 'AMENITY_SLOT_RESERVED', entity: 'Booking', entityId: 'BKG-01', userEmail: 'resident@resisync.com', createdAt: new Date(Date.now() - 1000 * 60 * 140).toISOString() },
+    ];
+    const logs = getStored(STORAGE_KEYS.AUDIT_LOGS, defaultLogs);
+    return Promise.resolve({ success: true, count: logs.length, logs } as any);
+  }
+
+  // ================= 16. USER PROFILE & SETTINGS =================
+  if (endpoint === '/users/profile' && method === 'PATCH') {
+    const users = getStored(STORAGE_KEYS.USERS, DEFAULT_USERS);
+    const updatedUsers = users.map((u: any) => (u.id === 'user-resident-01' ? { ...u, ...body } : u));
+    setStored(STORAGE_KEYS.USERS, updatedUsers);
+    return Promise.resolve({ success: true, user: updatedUsers[0], message: 'Profile updated successfully' } as any);
+  }
+
+  if (endpoint === '/users/family') {
+    return Promise.resolve({ success: true, member: { id: `fam-${Date.now()}`, ...body } } as any);
+  }
+
+  if (endpoint.startsWith('/users/family/') && method === 'DELETE') {
+    return Promise.resolve({ success: true } as any);
+  }
+
+  if (endpoint === '/users/vehicles') {
+    return Promise.resolve({ success: true, vehicle: { id: `veh-${Date.now()}`, ...body } } as any);
+  }
+
+  if (endpoint.startsWith('/users/vehicles/') && method === 'DELETE') {
+    return Promise.resolve({ success: true } as any);
+  }
+
+  if (endpoint === '/auth/forgot-password') {
+    return Promise.resolve({
+      success: true,
+      message: 'Password reset link dispatched.',
+      demoNotice: 'Demo mode active: Default password for all demo accounts is password123.',
+    } as any);
+  }
+
+  if (endpoint === '/auth/change-password') {
+    return Promise.resolve({
+      success: true,
+      message: 'Password changed successfully.',
+    } as any);
+  }
+
   // Default fallback response
   return Promise.resolve({
     success: true,
     message: 'Operation completed in standalone cloud client mode',
   } as any);
 }
+
