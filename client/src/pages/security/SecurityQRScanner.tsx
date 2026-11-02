@@ -164,6 +164,22 @@ export const SecurityQRScanner: React.FC = () => {
               <p className="font-bold text-text-primary mt-0.5">{visitor.invitedBy?.name || 'Rahul Sharma'}</p>
               <p className="text-[11px] text-text-secondary">{visitor.invitedBy?.phone || ''}</p>
             </div>
+
+            {/* Cause / Purpose of Visitor */}
+            <div className="col-span-2 p-2.5 rounded-lg bg-card border border-primary/30 flex items-start gap-2.5">
+              <span className="p-1 rounded bg-primary/20 text-primary font-bold text-[10px] uppercase tracking-wider shrink-0 mt-0.5">
+                Cause / Purpose
+              </span>
+              <div>
+                <p className="font-semibold text-text-primary text-xs">
+                  {visitor.purpose || 'Personal Visit / Resident Guest'}
+                </p>
+                <p className="text-[10px] text-text-muted mt-0.5">
+                  Verified authorization declared by flat resident
+                </p>
+              </div>
+            </div>
+
             {visitor.vehicleNumber && (
               <div>
                 <p className="text-text-muted">Vehicle License Plate:</p>

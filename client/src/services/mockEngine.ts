@@ -101,7 +101,7 @@ const DEFAULT_AMENITIES = [
     openTime: '06:00',
     closeTime: '21:00',
     slotDurationMinutes: 60,
-    pricing: 0,
+    pricing: 350,
     imageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800&auto=format&fit=crop&q=60',
     status: 'AVAILABLE',
   },
@@ -114,7 +114,7 @@ const DEFAULT_AMENITIES = [
     openTime: '05:30',
     closeTime: '22:30',
     slotDurationMinutes: 60,
-    pricing: 0,
+    pricing: 250,
     imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=60',
     status: 'AVAILABLE',
   },
@@ -140,7 +140,7 @@ const DEFAULT_AMENITIES = [
     openTime: '06:00',
     closeTime: '21:00',
     slotDurationMinutes: 60,
-    pricing: 0,
+    pricing: 400,
     imageUrl: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=800&auto=format&fit=crop&q=60',
     status: 'AVAILABLE',
   },
@@ -191,8 +191,10 @@ const DEFAULT_VISITORS = [
     status: 'APPROVED',
     passCode: '829410',
     qrToken: 'qr-token-829410',
-    purpose: 'Weekend Brunch',
+    purpose: 'Weekend Family Brunch & Visit',
+    vehicleNumber: 'KA-05-MH-2041',
     flat: { flatNumber: 'A-402' },
+    invitedBy: { name: 'Rahul Sharma', phone: '+91 98765 43210' },
   },
   {
     id: 'vis-02',
@@ -204,8 +206,39 @@ const DEFAULT_VISITORS = [
     checkInTime: new Date(Date.now() - 3600000).toISOString(),
     passCode: '319082',
     qrToken: 'qr-token-319082',
-    purpose: 'AC Servicing',
+    purpose: 'Air Conditioner Servicing & Coil Clean',
+    vehicleNumber: 'KA-01-AB-4412',
     flat: { flatNumber: 'A-402' },
+    invitedBy: { name: 'Rahul Sharma', phone: '+91 98765 43210' },
+  },
+  {
+    id: 'vis-03',
+    name: 'Amazon Prime Express',
+    phone: '+91 91234 56789',
+    visitorType: 'DELIVERY',
+    expectedAt: new Date(Date.now() - 1800000).toISOString(),
+    status: 'APPROVED',
+    passCode: '491204',
+    qrToken: 'qr-token-491204',
+    purpose: 'E-commerce Parcel Box Delivery',
+    vehicleNumber: 'KA-03-DL-8819',
+    flat: { flatNumber: 'A-402' },
+    invitedBy: { name: 'Rahul Sharma', phone: '+91 98765 43210' },
+  },
+  {
+    id: 'vis-04',
+    name: 'Dr. Sameer Sen',
+    phone: '+91 94455 66778',
+    visitorType: 'GUEST',
+    expectedAt: new Date(Date.now() - 86400000).toISOString(),
+    status: 'CHECKED_OUT',
+    checkInTime: new Date(Date.now() - 86400000).toISOString(),
+    checkOutTime: new Date(Date.now() - 82800000).toISOString(),
+    passCode: '551920',
+    qrToken: 'qr-token-551920',
+    purpose: 'Medical Consultation',
+    flat: { flatNumber: 'B-201' },
+    invitedBy: { name: 'Ananya Deshmukh', phone: '+91 98112 33445' },
   },
 ];
 
@@ -356,9 +389,9 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
 
     const newAdmin = {
       id: `user-admin-${Date.now()}`,
-      name: body.adminName,
-      email: body.adminEmail.toLowerCase().trim(),
-      phone: body.adminPhone,
+      name: body.adminName || 'Vikramaditya Rao',
+      email: (body.adminEmail || 'admin@resisync.com').toLowerCase().trim(),
+      phone: body.adminPhone || '+91 98200 12345',
       role: 'ADMIN',
       societyId: newSociety.id,
       societyCode,
@@ -473,6 +506,10 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
   // ================= 4. MAINTENANCE BILLS =================
   if (endpoint.startsWith('/maintenance') && method === 'GET') {
     const bills = getStored<any[]>(STORAGE_KEYS.BILLS, DEFAULT_BILLS);
+    const urlParams = new URLSearchParams(endpoint.includes('?') ? endpoint.split('?')[1] : '');
+    const statusParam = urlParams.get('status');
+    const filteredBills = (statusParam && statusParam !== 'ALL') ? bills.filter((b) => b.status === statusParam) : bills;
+
     const totalPending = bills
       .filter((b) => b.status === 'PENDING')
       .reduce((sum, b) => sum + b.totalAmount, 0);
@@ -485,7 +522,7 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     return Promise.resolve({
       success: true,
       totalPending,
-      bills,
+      bills: filteredBills,
       metrics: {
         totalBilled,
         totalCollected,
@@ -497,19 +534,48 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
 
   if (endpoint === '/maintenance' && method === 'POST') {
     const bills = getStored<any[]>(STORAGE_KEYS.BILLS, DEFAULT_BILLS);
+    const defaultFlats: any[] = [
+      { id: 'flat-a-101', flatNumber: 'A-101' },
+      { id: 'flat-a-202', flatNumber: 'A-202' },
+      { id: 'flat-a-303', flatNumber: 'A-303' },
+      { id: 'flat-a-402', flatNumber: 'A-402' },
+      { id: 'flat-b-101', flatNumber: 'B-101' },
+      { id: 'flat-b-201', flatNumber: 'B-201' },
+      { id: 'flat-c-101', flatNumber: 'C-101' },
+    ];
+    const flats = getStored<any[]>(STORAGE_KEYS.FLATS, defaultFlats);
+    const targetFlat = flats.find((f: any) => f.id === body.flatId || f.flatNumber === body.flatNumber) || {
+      id: body.flatId || 'flat-a-402',
+      flatNumber: body.flatNumber || 'A-402',
+    };
+
+    const items = body.items && Array.isArray(body.items) && body.items.length > 0
+      ? body.items.map((it: any, idx: number) => ({
+          id: `bi-${Date.now()}-${idx}`,
+          title: it.title || 'Society Assessment Charge',
+          amount: Number(it.amount) || 0,
+          category: it.category || 'MAINTENANCE',
+        }))
+      : [
+          { id: 'bi-1', title: 'Base Society Maintenance', amount: Number(body.amount || body.baseAmount || 3200), category: 'MAINTENANCE' },
+          { id: 'bi-2', title: 'Water Infrastructure Charges', amount: 450, category: 'WATER' },
+          { id: 'bi-3', title: 'Covered Parking Bay', amount: 500, category: 'PARKING' },
+        ];
+
+    const totalAmount = items.reduce((sum: number, it: any) => sum + (Number(it.amount) || 0), 0);
+    const billingMonth = body.billingMonth || body.month || 'December 2026';
+
     const newBill = {
       id: `bill-${Date.now()}`,
       billNumber: `BILL-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-      month: body.month || 'November',
-      year: body.year || 2026,
+      billingMonth,
+      billingYear: body.billingYear || body.year || 2026,
       dueDate: body.dueDate || new Date(Date.now() + 86400000 * 15).toISOString(),
-      baseAmount: Number(body.amount || body.baseAmount || 4200),
-      waterCharges: 600,
-      sinkingFund: 400,
-      totalAmount: Number(body.amount || body.baseAmount || 4200) + 1000,
+      totalAmount,
       status: 'PENDING',
       createdAt: new Date().toISOString(),
-      flat: { flatNumber: body.flatNumber || 'A-402' },
+      flat: { id: targetFlat.id, flatNumber: targetFlat.flatNumber, building: { name: targetFlat.buildingName || 'Tower A' } },
+      items,
     };
     bills.unshift(newBill);
     setStored(STORAGE_KEYS.BILLS, bills);
@@ -517,7 +583,7 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     return Promise.resolve({
       success: true,
       bill: newBill,
-      message: 'Maintenance bill generated successfully.',
+      message: `Maintenance invoice generated for Flat ${targetFlat.flatNumber} (${billingMonth}) successfully.`,
     } as any);
   }
 
@@ -529,12 +595,14 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     if (billIndex >= 0) {
       bills[billIndex].status = 'PAID';
       bills[billIndex].paidAt = new Date().toISOString();
+      bills[billIndex].paymentMethod = body.paymentMethod || 'UPI';
+      bills[billIndex].transactionId = `TXN-${Date.now().toString().slice(-8).toUpperCase()}`;
       bills[billIndex].receiptNumber = `RCPT-${Date.now().toString().slice(-6)}`;
       setStored(STORAGE_KEYS.BILLS, bills);
 
       return Promise.resolve({
         success: true,
-        message: 'Payment processed successfully!',
+        message: 'Payment processed successfully! Official digital receipt generated.',
         bill: bills[billIndex],
         receiptNumber: bills[billIndex].receiptNumber,
       } as any);
@@ -542,8 +610,31 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
   }
 
   // ================= 5. VISITORS =================
-  if (endpoint === '/visitors' && method === 'GET') {
-    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
+  if (endpoint.startsWith('/visitors') && method === 'GET') {
+    const urlParams = new URLSearchParams(endpoint.includes('?') ? endpoint.split('?')[1] : '');
+    const tab = urlParams.get('tab');
+    const search = urlParams.get('search')?.toLowerCase() || '';
+    let visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
+
+    if (tab === 'inside') {
+      visitors = visitors.filter((v) => v.status === 'CHECKED_IN');
+    } else if (tab === 'today') {
+      visitors = visitors.filter((v) => v.status === 'APPROVED' || v.status === 'EXPECTED');
+    } else if (tab === 'history') {
+      visitors = visitors.filter((v) => v.status === 'CHECKED_OUT' || v.status === 'CHECKED_IN' || v.checkInTime);
+    }
+
+    if (search) {
+      visitors = visitors.filter(
+        (v) =>
+          v.name?.toLowerCase().includes(search) ||
+          v.phone?.toLowerCase().includes(search) ||
+          v.passCode?.toLowerCase().includes(search) ||
+          v.flat?.flatNumber?.toLowerCase().includes(search) ||
+          v.purpose?.toLowerCase().includes(search)
+      );
+    }
+
     return Promise.resolve({
       success: true,
       visitors,
@@ -562,8 +653,10 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
       status: 'APPROVED',
       passCode,
       qrToken: `qr-token-${passCode}`,
-      purpose: body.purpose || 'Visit',
-      flat: { flatNumber: 'A-402' },
+      purpose: body.purpose || 'Personal Visit / Guest Entry',
+      vehicleNumber: body.vehicleNumber || '',
+      flat: { flatNumber: body.flatNumber || 'A-402' },
+      invitedBy: { name: 'Rahul Sharma', phone: '+91 98765 43210' },
     };
     visitors.unshift(newVisitor);
     setStored(STORAGE_KEYS.VISITORS, visitors);
@@ -669,7 +762,7 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
         endTime: '08:00',
         guestsCount: 2,
         status: 'CONFIRMED',
-        totalFee: 0,
+        totalFee: 350,
         createdAt: new Date().toISOString(),
         amenity: DEFAULT_AMENITIES[0],
       },
@@ -683,6 +776,12 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
 
   if (endpoint === '/bookings' && method === 'POST') {
     const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []);
+    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, DEFAULT_AMENITIES);
+    const targetAmenity = amenities.find((a: any) => a.id === body.amenityId) || DEFAULT_AMENITIES[0];
+    const calculatedFee = body.totalFee !== undefined && Number(body.totalFee) > 0
+      ? Number(body.totalFee)
+      : (Number(targetAmenity?.pricing) || 350);
+
     const newBooking = {
       id: `book-${Date.now()}`,
       amenityId: body.amenityId,
@@ -691,9 +790,9 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
       endTime: body.endTime,
       guestsCount: body.guestsCount || 1,
       status: 'CONFIRMED',
-      totalFee: 0,
+      totalFee: calculatedFee,
       createdAt: new Date().toISOString(),
-      amenity: DEFAULT_AMENITIES.find((a) => a.id === body.amenityId) || DEFAULT_AMENITIES[0],
+      amenity: targetAmenity,
     };
     bookings.push(newBooking);
     setStored(STORAGE_KEYS.BOOKINGS, bookings);
@@ -701,7 +800,7 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     return Promise.resolve({
       success: true,
       booking: newBooking,
-      message: 'Amenity slot reserved successfully!',
+      message: `Amenity slot reserved successfully! Fee: ₹${calculatedFee}`,
     } as any);
   }
 
@@ -719,9 +818,20 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     } as any);
   }
 
-  // ================= 7. COMPLAINTS =================
-  if (endpoint === '/complaints' && method === 'GET') {
-    const complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, DEFAULT_COMPLAINTS);
+  // ================= 7. COMPLAINTS & HELPDESK =================
+  if (endpoint.startsWith('/complaints') && method === 'GET') {
+    const urlParams = new URLSearchParams(endpoint.includes('?') ? endpoint.split('?')[1] : '');
+    const statusFilter = urlParams.get('status');
+    const categoryFilter = urlParams.get('category');
+    let complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, DEFAULT_COMPLAINTS);
+
+    if (statusFilter && statusFilter !== 'ALL') {
+      complaints = complaints.filter((c: any) => c.status === statusFilter);
+    }
+    if (categoryFilter && categoryFilter !== 'ALL') {
+      complaints = complaints.filter((c: any) => c.category === categoryFilter);
+    }
+
     return Promise.resolve({
       success: true,
       complaints,
@@ -740,7 +850,8 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
       priority: body.priority || 'MEDIUM',
       status: 'OPEN',
       createdAt: new Date().toISOString(),
-      flat: { flatNumber: 'A-402' },
+      flat: { flatNumber: body.flatNumber || 'A-402' },
+      residentName: 'Rahul Sharma',
       comments: [],
     };
     complaints.unshift(newComplaint);
@@ -782,6 +893,9 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     const target = complaints.find((c) => c.id === compId);
     if (target) {
       target.status = body.status || target.status;
+      if (body.status === 'RESOLVED') {
+        target.resolvedAt = new Date().toISOString();
+      }
       if (body.assignedStaffName) target.assignedStaffName = body.assignedStaffName;
       setStored(STORAGE_KEYS.COMPLAINTS, complaints);
     }
@@ -804,16 +918,40 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
   if (endpoint === '/announcements' && method === 'POST') {
     const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, DEFAULT_ANNOUNCEMENTS);
     const newNotice = {
-      id: `anc-${Date.now()}`,
+      id: `ann-${Date.now()}`,
       title: body.title,
       content: body.content,
       category: body.category || 'GENERAL',
       priority: body.priority || 'MEDIUM',
+      isPinned: !!body.isPinned,
       authorName: 'Priya Patel (Facility Admin)',
       createdAt: new Date().toISOString(),
     };
     announcements.unshift(newNotice);
     setStored(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+
+    // Broadcast notification to Resident & Guard notification bells
+    const defaultNotifs: any[] = [
+      {
+        id: 'notif-01',
+        title: 'Visitor Pass Approved',
+        message: 'Security gate verified guest Aarush Patel for Flat A-402.',
+        type: 'VISITOR',
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+      },
+    ];
+    let notifs = getStored<any[]>(STORAGE_KEYS.NOTIFICATIONS, defaultNotifs);
+    notifs.unshift({
+      id: `notif-${Date.now()}`,
+      title: `📢 Notice: ${body.title}`,
+      message: body.content?.slice(0, 120) + (body.content?.length > 120 ? '...' : ''),
+      type: 'ANNOUNCEMENT',
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    });
+    setStored(STORAGE_KEYS.NOTIFICATIONS, notifs);
+
     return Promise.resolve({
       success: true,
       announcement: newNotice,
@@ -822,13 +960,29 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
   }
 
   // ================= 9. IOT TELEMETRY =================
-  if (endpoint === '/iot') {
-    return Promise.resolve({
+  if (endpoint.startsWith('/iot')) {
+    const iotData = {
       success: true,
       isDemoMode: true,
+      mode: 'HARDWARE_SIMULATION',
       devices: DEFAULT_IOT,
-      systemHealth: { security: 'NORMAL', power: 'NORMAL', water: 'NORMAL', internet: 'NORMAL' },
-    } as any);
+      systemHealth: {
+        power: { value: 48.6, unit: 'kW', status: 'OPTIMAL', text: 'Grid Online (48.6 kW)' },
+        water: { value: 78.4, unit: '%', status: 'NORMAL', text: 'Overhead Tanks 78%' },
+        security: { value: 100, unit: 'ANPR', status: 'ARMED', text: '100% Cams & Boom Online' },
+        airQuality: { value: 58, unit: 'AQI', status: 'NORMAL', text: 'AQI 58 (Good)' },
+        parking: { value: 70, unit: '%', status: 'NORMAL', text: '18 Bays Available (70% Occupied)' },
+      },
+      history: [
+        { time: '00:00', power: 32.1, water: 88, aqi: 45, parking: 40 },
+        { time: '04:00', power: 26.4, water: 86, aqi: 40, parking: 42 },
+        { time: '08:00', power: 54.2, water: 81, aqi: 62, parking: 78 },
+        { time: '12:00', power: 61.8, water: 76, aqi: 65, parking: 65 },
+        { time: '16:00', power: 48.5, water: 74, aqi: 58, parking: 55 },
+        { time: '20:00', power: 58.2, water: 72, aqi: 55, parking: 85 },
+      ],
+    };
+    return Promise.resolve(iotData as any);
   }
 
   // ================= 10. ANALYTICS =================
@@ -1048,6 +1202,16 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
   // ================= 14. EMERGENCY & SOS =================
   if (endpoint.startsWith('/emergency')) {
     const defaultEmergencies: any[] = [
+      {
+        id: 'emg-02',
+        emergencyType: 'SECURITY',
+        residentName: 'Anita Rao',
+        residentPhone: '+91 98333 44556',
+        flatNumber: 'B-101',
+        status: 'ACTIVE',
+        note: 'Suspicious individual loitering near ground floor parking bay P-101.',
+        createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      },
       {
         id: 'emg-01',
         emergencyType: 'MEDICAL',

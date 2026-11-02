@@ -120,6 +120,8 @@ export const App: React.FC = () => {
               <Route path="amenities" element={<ResidentAmenities />} />
               <Route path="helpdesk" element={<ResidentHelpdesk />} />
               <Route path="alerts" element={<ResidentAlerts />} />
+              <Route path="emergency" element={<ResidentAlerts />} />
+              <Route path="sos" element={<ResidentAlerts />} />
               <Route path="society-status" element={<ResidentSocietyStatus />} />
               <Route path="profile" element={<ResidentProfile />} />
               <Route path="settings" element={<ResidentProfile />} />
@@ -140,6 +142,7 @@ export const App: React.FC = () => {
               <Route path="deliveries" element={<SecurityDeliveries />} />
               <Route path="history" element={<SecurityHistory />} />
               <Route path="emergency" element={<SecurityEmergency />} />
+              <Route path="sos" element={<SecurityEmergency />} />
             </Route>
 
             {/* Administrator Protected Routes */}
@@ -161,6 +164,8 @@ export const App: React.FC = () => {
               <Route path="complaints" element={<AdminComplaints />} />
               <Route path="announcements" element={<AdminAnnouncements />} />
               <Route path="iot" element={<AdminIoT />} />
+              <Route path="emergency" element={<SecurityEmergency />} />
+              <Route path="sos" element={<SecurityEmergency />} />
               <Route path="analytics" element={<AdminDashboard />} />
               <Route path="security" element={<AdminVisitors />} />
               <Route path="settings" element={<AdminSettings />} />

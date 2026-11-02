@@ -21,20 +21,23 @@
     color-scheme: dark;
   }
 
+  html.light,
+  body.light,
+  [data-theme="light"],
   .light {
-    --color-bg-main: 248 250 252; /* #F8FAFC - crisp slate-50 */
-    --color-bg-surface: 255 255 255; /* #FFFFFF - pure white */
-    --color-bg-card: 255 255 255; /* #FFFFFF - crisp white */
-    --color-bg-card-hover: 241 245 249; /* #F1F5F9 - slate-100 */
-    --color-border: 226 232 240; /* #E2E8F0 - slate-200 */
-    --color-border-light: 203 213 225; /* #CBD5E1 - slate-300 */
-    --color-text-primary: 15 23 42; /* #0F172A - slate-900 */
-    --color-text-secondary: 71 85 105; /* #475569 - slate-600 */
-    --color-text-muted: 148 163 184; /* #94A3B8 - slate-400 */
-    --scrollbar-track: #F1F5F9;
-    --scrollbar-thumb: #CBD5E1;
-    --card-glass-bg: rgba(255, 255, 255, 0.95);
-    --card-glass-border: #E2E8F0;
+    --color-bg-main: 248 250 252 !important; /* #F8FAFC - crisp slate-50 */
+    --color-bg-surface: 255 255 255 !important; /* #FFFFFF - pure white */
+    --color-bg-card: 255 255 255 !important; /* #FFFFFF - crisp white */
+    --color-bg-card-hover: 241 245 249 !important; /* #F1F5F9 - slate-100 */
+    --color-border: 226 232 240 !important; /* #E2E8F0 - slate-200 */
+    --color-border-light: 203 213 225 !important; /* #CBD5E1 - slate-300 */
+    --color-text-primary: 15 23 42 !important; /* #0F172A - slate-900 */
+    --color-text-secondary: 71 85 105 !important; /* #475569 - slate-600 */
+    --color-text-muted: 100 116 139 !important; /* #64748B - slate-500 */
+    --scrollbar-track: #F1F5F9 !important;
+    --scrollbar-thumb: #CBD5E1 !important;
+    --card-glass-bg: rgba(255, 255, 255, 0.95) !important;
+    --card-glass-border: #E2E8F0 !important;
     color-scheme: light;
   }
 
@@ -97,4 +100,76 @@
 
 .live-pulse {
   animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ==========================================================================
+   DAY / LIGHT MODE COMPREHENSIVE OVERRIDES
+   Ensures complete legibility, contrast, and visual hierarchy in Day Mode
+   ========================================================================== */
+
+/* Headings and body texts using text-white adapt to crisp slate-900 in Day Mode */
+html.light h1.text-white,
+html.light h2.text-white,
+html.light h3.text-white,
+html.light h4.text-white,
+html.light h5.text-white,
+html.light h6.text-white,
+html.light span.text-white:not(.keep-white),
+html.light p.text-white:not(.keep-white),
+html.light div.text-white:not(.keep-white),
+html.light .text-white:not(.keep-white):not(button.bg-primary *):not(.bg-primary *) {
+  color: #0F172A !important;
+}
+
+/* Muted grays adapt to high-contrast Day Mode tones */
+html.light .text-gray-100:not(.keep-white),
+html.light .text-gray-200:not(.keep-white) {
+  color: #1E293B !important;
+}
+
+html.light .text-gray-300:not(.keep-white) {
+  color: #334155 !important;
+}
+
+html.light .text-gray-400:not(.keep-white) {
+  color: #475569 !important;
+}
+
+html.light .text-gray-500:not(.keep-white) {
+  color: #64748B !important;
+}
+
+/* Hardcoded dark cards/gradients adapt to crisp clean white/slate surfaces */
+html.light .bg-\[\#121A22\],
+html.light .bg-\[\#121B22\],
+html.light .from-\[\#121A22\],
+html.light .via-\[\#121A22\],
+html.light .via-\[\#121B22\],
+html.light .to-\[\#121A22\],
+html.light .bg-slate-950,
+html.light .bg-slate-900:not(.keep-dark) {
+  background-color: #F8FAFC !important;
+}
+
+html.light .bg-slate-800:not(.keep-dark),
+html.light .bg-gray-800:not(.keep-dark) {
+  background-color: #F1F5F9 !important;
+}
+
+html.light .border-slate-800,
+html.light .border-gray-800,
+html.light .border-gray-700 {
+  border-color: #E2E8F0 !important;
+}
+
+/* Buttons, primary pills and badges keep crisp white text across both modes */
+html.light button.bg-primary,
+html.light button.bg-primary *,
+html.light .bg-primary,
+html.light .bg-primary *,
+html.light .bg-status-emergency,
+html.light .bg-status-emergency *,
+html.light .keep-white,
+html.light .keep-white * {
+  color: #FFFFFF !important;
 }

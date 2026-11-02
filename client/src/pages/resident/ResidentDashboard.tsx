@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import {
   UserCheck,
   CreditCard,
@@ -17,23 +19,76 @@ import {
   Clock,
   ArrowUpRight,
   Building,
+  QrCode,
+  Receipt,
+  Download,
+  CheckCircle2,
 } from 'lucide-react';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { QRPassModal } from '../../components/common/QRPassModal';
+import { Modal } from '../../components/common/Modal';
 import api from '../../services/api';
 import { Visitor, MaintenanceBill, Complaint, Announcement } from '../../types';
 
 export const ResidentDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useNotification();
 
   const [upcomingVisitors, setUpcomingVisitors] = useState<Visitor[]>([]);
-  const [maintenanceDue, setMaintenanceDue] = useState<{ amount: number; dueDate: string; billId?: string } | null>(null);
+  const [maintenanceDue, setMaintenanceDue] = useState<{ amount: number; dueDate: string; billId?: string; billNumber?: string } | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [activePass, setActivePass] = useState<Visitor | null>(null);
   const [deliveriesAtGate, setDeliveriesAtGate] = useState<number>(1);
   const [loading, setLoading] = useState(true);
+
+  // Pay Modal & Receipt
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CARD' | 'NETBANKING'>('UPI');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paidReceipt, setPaidReceipt] = useState<any | null>(null);
+
+  const handlePayBill = async () => {
+    if (!maintenanceDue?.billId) return;
+    setIsProcessing(true);
+    try {
+      const res = await api.payBill(maintenanceDue.billId, {
+        paymentMethod,
+        mockSuccess: true,
+      });
+
+      if (res.success) {
+        confetti({
+          particleCount: 90,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#FF8A00', '#10B981', '#3B82F6'],
+        });
+
+        showToast({
+          type: 'success',
+          title: 'Payment Successful',
+          message: `₹${maintenanceDue.amount} settled successfully for Flat ${user?.flat?.flatNumber || 'A-402'}.`,
+        });
+
+        setPaidReceipt({
+          billNumber: maintenanceDue.billNumber || 'BILL-2026-A402',
+          totalAmount: maintenanceDue.amount,
+          paidAt: new Date().toISOString(),
+          paymentMethod,
+          transactionId: res.bill?.transactionId || `TXN-${Date.now().toString().slice(-8).toUpperCase()}`,
+        });
+
+        setShowPayModal(false);
+        setMaintenanceDue(null);
+      }
+    } catch (err: any) {
+      showToast({ type: 'error', title: 'Payment Failed', message: err.message });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -57,6 +112,7 @@ export const ResidentDashboard: React.FC = () => {
               year: 'numeric',
             }),
             billId: pending.id,
+            billNumber: pending.billNumber,
           });
         }
         setAnnouncements((annRes.announcements || []).slice(0, 2));
@@ -289,12 +345,22 @@ export const ResidentDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => navigate('/resident/maintenance')}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-background font-bold text-xs hover:bg-primary-hover shadow-orange-glow transition self-start sm:self-center"
-                >
-                  Pay Invoice Now
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-center">
+                  <button
+                    onClick={() => setShowPayModal(true)}
+                    className="px-5 py-2.5 rounded-xl bg-primary text-background font-bold text-xs hover:bg-primary-hover shadow-orange-glow transition flex items-center gap-2"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pay Invoice Now</span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/resident/maintenance')}
+                    className="px-3 py-2.5 rounded-xl bg-surface border border-border text-xs text-text-secondary hover:text-white font-medium"
+                    title="View itemized ledger"
+                  >
+                    Details
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="p-4 rounded-xl bg-surface border border-status-success/30 flex items-center gap-3 text-xs text-status-success">
@@ -387,6 +453,177 @@ export const ResidentDashboard: React.FC = () => {
         onClose={() => setActivePass(null)}
         visitor={activePass}
       />
+
+      {/* Pay Maintenance Modal */}
+      <Modal
+        isOpen={showPayModal}
+        onClose={() => setShowPayModal(false)}
+        title="Settle Society Maintenance"
+        subtitle={`Invoice for Unit ${user?.flat?.flatNumber || 'A-402'} • Greenview Residency`}
+      >
+        <div className="space-y-5">
+          {/* Amount Due Banner */}
+          <div className="p-4 rounded-xl bg-surface border border-border flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase text-text-muted">Total Payable Amount</p>
+              <h3 className="text-2xl font-black text-white font-sans mt-0.5">
+                ₹{maintenanceDue?.amount.toLocaleString('en-IN')}
+              </h3>
+              <p className="text-xs text-status-warning mt-0.5">Due: {maintenanceDue?.dueDate}</p>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary font-bold">
+                ESCROW DIRECT
+              </span>
+              <p className="text-[11px] text-text-muted mt-1 font-mono">
+                {maintenanceDue?.billNumber || 'BILL-2026-A402'}
+              </p>
+            </div>
+          </div>
+
+          {/* Payment Method Selector */}
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wider">
+              Select Payment Gateway / Method
+            </label>
+            <div className="grid grid-cols-3 gap-2.5">
+              {(['UPI', 'CARD', 'NETBANKING'] as const).map((method) => (
+                <button
+                  key={method}
+                  type="button"
+                  onClick={() => setPaymentMethod(method)}
+                  className={`p-3 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
+                    paymentMethod === method
+                      ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                      : 'border-border bg-card text-text-secondary hover:border-border-light'
+                  }`}
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span className="text-xs font-bold">{method}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dynamic Payment Details */}
+          {paymentMethod === 'UPI' && (
+            <div className="p-3.5 rounded-xl bg-card border border-border text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted">Virtual Payment Address (VPA):</span>
+                <span className="font-mono text-primary font-bold">society.greenview@icici</span>
+              </div>
+              <p className="text-[11px] text-text-secondary">
+                Supports Google Pay, PhonePe, Paytm, CRED & BHIM instant verification.
+              </p>
+            </div>
+          )}
+
+          {paymentMethod === 'CARD' && (
+            <div className="p-3.5 rounded-xl bg-card border border-border text-xs space-y-2">
+              <p className="text-text-secondary">
+                Direct RuPay, Visa & MasterCard society payment gateway active (Zero transaction surcharge).
+              </p>
+            </div>
+          )}
+
+          {paymentMethod === 'NETBANKING' && (
+            <div className="p-3.5 rounded-xl bg-card border border-border text-xs space-y-2">
+              <p className="text-text-secondary">
+                Direct NEFT/RTGS settlement via HDFC, ICICI, SBI & Axis Bank.
+              </p>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={() => setShowPayModal(false)}
+              className="px-4 py-2 rounded-xl text-xs text-text-secondary hover:text-white"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={handlePayBill}
+              className="px-5 py-2.5 rounded-xl bg-primary text-background font-bold text-xs hover:bg-primary-hover shadow-orange-glow transition flex items-center gap-2"
+            >
+              {isProcessing ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                  <span>Processing Gateway...</span>
+                </>
+              ) : (
+                `Authorize Payment (₹${maintenanceDue?.amount})`
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Official Receipt Modal */}
+      <Modal
+        isOpen={!!paidReceipt}
+        onClose={() => setPaidReceipt(null)}
+        title="Official Maintenance Receipt"
+        subtitle="RESISYNC Certified Society Payment Acknowledgment"
+        maxWidth="lg"
+      >
+        {paidReceipt && (
+          <div className="p-6 bg-card rounded-2xl border border-border space-y-5">
+            <div className="flex items-start justify-between border-b border-border pb-4">
+              <div>
+                <h4 className="text-base font-extrabold text-white tracking-tight">
+                  GREENVIEW RESIDENCY APARTMENT OWNERS ASSOC.
+                </h4>
+                <p className="text-xs text-text-muted mt-0.5">
+                  Reg No: BLR-EST/4912/2022 • Bellandur, Bengaluru 560103
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="inline-block px-2.5 py-1 rounded-full bg-status-success/15 text-status-success border border-status-success/30 font-bold text-xs">
+                  PAID IN FULL
+                </span>
+                <p className="text-[11px] text-text-muted mt-1 font-mono">{paidReceipt.billNumber}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <p className="text-text-muted">Billed To:</p>
+                <p className="font-bold text-text-primary text-sm mt-0.5">{user?.name || 'Rahul Sharma'}</p>
+                <p className="text-text-secondary">Flat Unit {user?.flat?.flatNumber || 'A-402'}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-text-muted">Payment Date & Txn:</p>
+                <p className="font-semibold text-text-primary mt-0.5">
+                  {new Date(paidReceipt.paidAt).toLocaleDateString('en-IN')}
+                </p>
+                <p className="font-mono text-primary text-[11px]">{paidReceipt.transactionId}</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-surface rounded-xl border border-border flex items-center justify-between text-xs">
+              <span className="font-semibold text-text-primary">Total Amount Settled</span>
+              <span className="font-mono font-bold text-base text-primary">₹{paidReceipt.totalAmount.toLocaleString('en-IN')}</span>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-[11px] text-text-muted">
+                System-generated digitally signed receipt. Valid without physical stamp.
+              </span>
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 rounded-xl bg-surface border border-border text-text-primary hover:text-primary text-xs font-semibold flex items-center gap-1.5"
+              >
+                <Download className="w-4 h-4" /> Print / Save
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

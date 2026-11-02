@@ -107,7 +107,7 @@ export const ResidentSocietyStatus: React.FC = () => {
             </div>
           </div>
           <h3 className="text-2xl font-black text-white mt-2 font-mono">
-            {health.power.value} <span className="text-xs font-sans text-text-muted">kW</span>
+            {health?.power?.value ?? 48.6} <span className="text-xs font-sans text-text-muted">kW</span>
           </h3>
           <p className="text-[11px] text-text-secondary mt-1 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-status-success" />
@@ -129,7 +129,7 @@ export const ResidentSocietyStatus: React.FC = () => {
             </div>
           </div>
           <h3 className="text-2xl font-black text-white mt-2 font-mono">
-            {health.water.value} <span className="text-xs font-sans text-text-muted">%</span>
+            {health?.water?.value ?? 78.4} <span className="text-xs font-sans text-text-muted">%</span>
           </h3>
           <p className="text-[11px] text-text-secondary mt-1 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-status-info" />
@@ -151,7 +151,7 @@ export const ResidentSocietyStatus: React.FC = () => {
             </div>
           </div>
           <h3 className="text-2xl font-black text-white mt-2 font-mono">
-            {health.airQuality.value} <span className="text-xs font-sans text-text-muted">AQI</span>
+            {health?.airQuality?.value ?? 58} <span className="text-xs font-sans text-text-muted">AQI</span>
           </h3>
           <p className="text-[11px] text-text-secondary mt-1 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-status-success" />

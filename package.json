@@ -7,7 +7,9 @@
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
-    "build": "npm run build --prefix server && npm run build --prefix client",
+    "build": "npm run build:client && node -e \"const fs = require('fs'); if (!fs.existsSync('dist')) fs.mkdirSync('dist', { recursive: true }); fs.cpSync('client/dist', 'dist', { recursive: true });\"",
+    "build:all": "npm run build --prefix server && npm run build --prefix client",
+    "build:client": "npm run build --prefix client",
     "seed": "npm run seed --prefix server",
     "test": "npm run test --prefix server && npm run test --prefix client"
   },
