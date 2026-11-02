@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ThemeToggle } from '../../components/common/ThemeToggle';
 import {
   ShieldCheck,
   Building2,
@@ -68,6 +69,7 @@ export const WelcomePage: React.FC = () => {
 
         {/* Right Action CTAs */}
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {isAuthenticated ? (
             <button
               onClick={() => {

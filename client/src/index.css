@@ -3,19 +3,47 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --bg-main: #050B10;
-    --bg-surface: #10171D;
-    --bg-card: #151E25;
-    --border-color: #2B363F;
-    --primary-orange: #FF8A00;
+  :root,
+  .dark {
+    --color-bg-main: 5 11 16; /* #050B10 */
+    --color-bg-surface: 16 23 29; /* #10171D */
+    --color-bg-card: 21 30 37; /* #151E25 */
+    --color-bg-card-hover: 27 37 46; /* #1B252E */
+    --color-border: 43 54 63; /* #2B363F */
+    --color-border-light: 56 70 82; /* #384652 */
+    --color-text-primary: 245 247 250; /* #F5F7FA */
+    --color-text-secondary: 166 176 185; /* #A6B0B9 */
+    --color-text-muted: 108 122 135; /* #6C7A87 */
+    --scrollbar-track: #0A1016;
+    --scrollbar-thumb: #2B363F;
+    --card-glass-bg: rgba(21, 30, 37, 0.85);
+    --card-glass-border: #2B363F;
+    color-scheme: dark;
+  }
+
+  .light {
+    --color-bg-main: 248 250 252; /* #F8FAFC - crisp slate-50 */
+    --color-bg-surface: 255 255 255; /* #FFFFFF - pure white */
+    --color-bg-card: 255 255 255; /* #FFFFFF - crisp white */
+    --color-bg-card-hover: 241 245 249; /* #F1F5F9 - slate-100 */
+    --color-border: 226 232 240; /* #E2E8F0 - slate-200 */
+    --color-border-light: 203 213 225; /* #CBD5E1 - slate-300 */
+    --color-text-primary: 15 23 42; /* #0F172A - slate-900 */
+    --color-text-secondary: 71 85 105; /* #475569 - slate-600 */
+    --color-text-muted: 148 163 184; /* #94A3B8 - slate-400 */
+    --scrollbar-track: #F1F5F9;
+    --scrollbar-thumb: #CBD5E1;
+    --card-glass-bg: rgba(255, 255, 255, 0.95);
+    --card-glass-border: #E2E8F0;
+    color-scheme: light;
   }
 
   body {
-    background-color: #050B10;
-    color: #F5F7FA;
+    background-color: rgb(var(--color-bg-main));
+    color: rgb(var(--color-text-primary));
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     overflow-x: hidden;
+    transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
@@ -26,11 +54,11 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A1016;
+  background: var(--scrollbar-track, #0A1016);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2B363F;
+  background: var(--scrollbar-thumb, #2B363F);
   border-radius: 4px;
 }
 
@@ -40,9 +68,9 @@
 
 /* Card glass glow */
 .card-glass {
-  background: rgba(21, 30, 37, 0.85);
+  background: var(--card-glass-bg, rgba(21, 30, 37, 0.85));
   backdrop-filter: blur(12px);
-  border: 1px solid #2B363F;
+  border: 1px solid var(--card-glass-border, #2B363F);
 }
 
 .card-interactive {
@@ -52,7 +80,7 @@
 .card-interactive:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 138, 0, 0.4);
-  box-shadow: 0 8px 25px -4px rgba(0, 0, 0, 0.5), 0 0 15px -3px rgba(255, 138, 0, 0.2);
+  box-shadow: 0 8px 25px -4px rgba(0, 0, 0, 0.3), 0 0 15px -3px rgba(255, 138, 0, 0.2);
 }
 
 /* Pulse animation for live indicators */
@@ -70,4 +98,3 @@
 .live-pulse {
   animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-

@@ -14,12 +14,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#050B10',
-        surface: '#10171D',
-        card: '#151E25',
-        'card-hover': '#1B252E',
-        border: '#2B363F',
-        'border-light': '#384652',
+        background: 'rgb(var(--color-bg-main) / <alpha-value>)',
+        surface: 'rgb(var(--color-bg-surface) / <alpha-value>)',
+        card: 'rgb(var(--color-bg-card) / <alpha-value>)',
+        'card-hover': 'rgb(var(--color-bg-card-hover) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        'border-light': 'rgb(var(--color-border-light) / <alpha-value>)',
         primary: {
           DEFAULT: '#FF8A00',
           hover: '#FF9E26',
@@ -28,9 +28,9 @@ export default {
           muted: 'rgba(255, 138, 0, 0.15)',
         },
         text: {
-          primary: '#F5F7FA',
-          secondary: '#A6B0B9',
-          muted: '#6C7A87',
+          primary: 'rgb(var(--color-text-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-text-secondary) / <alpha-value>)',
+          muted: 'rgb(var(--color-text-muted) / <alpha-value>)',
         },
         status: {
           success: '#10B981',

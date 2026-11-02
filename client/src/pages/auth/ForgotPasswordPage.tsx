@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ThemeToggle } from '../../components/common/ThemeToggle';
 import api from '../../services/api';
 
 export const ForgotPasswordPage: React.FC = () => {
@@ -27,7 +28,12 @@ export const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4 py-8">
+    <div className="relative min-h-screen bg-background flex flex-col justify-center items-center px-4 py-8">
+      {/* Top Corner Theme Toggle */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-md bg-surface border border-border rounded-panel p-6 sm:p-8 shadow-elevated">
         <button
           onClick={() => navigate('/login')}

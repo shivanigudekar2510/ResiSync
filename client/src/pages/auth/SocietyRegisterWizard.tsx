@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ThemeToggle } from '../../components/common/ThemeToggle';
 import api from '../../services/api';
 import confetti from 'canvas-confetti';
 import {
@@ -194,6 +195,7 @@ export const SocietyRegisterWizard: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link
             to="/welcome"
             className="text-xs text-text-secondary hover:text-text-primary transition"

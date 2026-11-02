@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ThemeToggle } from '../../components/common/ThemeToggle';
 import {
   Eye,
   EyeOff,
@@ -72,7 +73,12 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4 py-8 selection:bg-primary/30 font-sans">
+    <div className="relative min-h-screen bg-background flex flex-col justify-center items-center px-4 py-8 selection:bg-primary/30 font-sans">
+      {/* Top Corner Theme Toggle */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <ThemeToggle />
+      </div>
+
       {/* Brand Header */}
       <div className="flex items-center gap-3 mb-6 cursor-pointer" onClick={() => navigate('/welcome')}>
         <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center shadow-orange-glow text-background font-black text-lg">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ThemeToggle } from '../common/ThemeToggle';
 import {
   LayoutDashboard,
   Users,
@@ -94,7 +95,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
         }`}
       >
         {/* Brand Header */}
-        <div className="h-16 flex items-center px-5 border-b border-border bg-[#0A1016]">
+        <div className="h-16 flex items-center px-5 border-b border-border bg-surface">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center shadow-orange-glow text-background font-black text-sm">
               R
@@ -152,7 +153,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
         </nav>
 
         {/* Quick Role Switcher for seamless testing */}
-        <div className="px-3 py-2 border-t border-border bg-[#0C1217]">
+        <div className="px-3 py-2 border-t border-border bg-card/40">
           <p className="text-[10px] uppercase font-bold tracking-wider text-text-muted px-1 mb-1.5">
             Quick Switch Demo Role
           </p>
@@ -185,7 +186,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* User Footer Profile & Logout */}
-        <div className="p-3 border-t border-border bg-[#0A1016] flex items-center justify-between">
+        <div className="p-3 border-t border-border bg-surface flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
             <img
               src={user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
@@ -197,13 +198,16 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
               <p className="text-[10px] text-text-muted truncate">{user?.email || 'resident@resisync.com'}</p>
             </div>
           </div>
-          <button
-            onClick={logout}
-            title="Log Out"
-            className="p-1.5 rounded-lg text-text-secondary hover:text-status-danger hover:bg-card transition"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <button
+              onClick={logout}
+              title="Log Out"
+              className="p-1.5 rounded-lg text-text-secondary hover:text-status-danger hover:bg-card transition"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </aside>
     </>

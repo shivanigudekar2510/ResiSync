@@ -20,12 +20,16 @@ import {
   HardDrive,
   Cpu,
   Key,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export const AdminSettings: React.FC = () => {
   const { showToast } = useNotification();
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'firebase' | 'audit' | 'profile'>('firebase');
 
   // Audit Logs State
@@ -425,27 +429,101 @@ export const AdminSettings: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: SOCIETY PROFILE */}
+      {/* TAB 2: SOCIETY PROFILE & APPEARANCE */}
       {activeTab === 'profile' && (
-        <div className="bg-card rounded-panel border border-border p-6 shadow-card space-y-6">
-          <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider">
-            Society Association Profile & Governance
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            <div className="p-4 rounded-xl bg-surface border border-border">
-              <p className="text-text-muted">Registered Name</p>
-              <p className="font-bold text-text-primary text-base mt-0.5">Greenview Residency</p>
-              <p className="text-[11px] text-text-secondary mt-1">Bellandur, Outer Ring Rd, Bengaluru</p>
+        <div className="space-y-6">
+          <div className="bg-card rounded-panel border border-border p-6 shadow-card space-y-6">
+            <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider">
+              Society Association Profile & Governance
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-surface border border-border">
+                <p className="text-text-muted">Registered Name</p>
+                <p className="font-bold text-text-primary text-base mt-0.5">
+                  {localStorage.getItem('resisync_society_name') || 'Greenview Residency'}
+                </p>
+                <p className="text-[11px] text-text-secondary mt-1">Outer Ring Road, Bengaluru</p>
+              </div>
+              <div className="p-4 rounded-xl bg-surface border border-border">
+                <p className="text-text-muted">Society Registration Code</p>
+                <p className="font-mono font-black text-primary text-xl mt-0.5">
+                  {localStorage.getItem('resisync_society_code') || 'GRNVW-2026'}
+                </p>
+                <p className="text-[11px] text-text-secondary mt-1">Used for resident self-onboarding</p>
+              </div>
+              <div className="p-4 rounded-xl bg-surface border border-border">
+                <p className="text-text-muted">Campus Inventory</p>
+                <p className="font-bold text-text-primary text-base mt-0.5">140 Units • Multi-Wing</p>
+                <p className="text-[11px] text-status-success font-medium mt-1">91% Occupancy Rate</p>
+              </div>
             </div>
-            <div className="p-4 rounded-xl bg-surface border border-border">
-              <p className="text-text-muted">Society Registration Code</p>
-              <p className="font-mono font-black text-primary text-xl mt-0.5">GRNVW-2026</p>
-              <p className="text-[11px] text-text-secondary mt-1">Used for resident self-onboarding</p>
+          </div>
+
+          {/* Theme & Display Preferences Card */}
+          <div className="bg-card rounded-panel border border-border p-6 shadow-card space-y-4">
+            <div>
+              <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider">
+                Display Theme & Interface Appearance
+              </h3>
+              <p className="text-xs text-text-secondary mt-1">
+                Customize your workstation interface. Seamlessly toggle between dark and light modes.
+              </p>
             </div>
-            <div className="p-4 rounded-xl bg-surface border border-border">
-              <p className="text-text-muted">Campus Inventory</p>
-              <p className="font-bold text-text-primary text-base mt-0.5">140 Units • 2 Towers</p>
-              <p className="text-[11px] text-status-success font-medium mt-1">91% Occupancy Rate</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* Dark Theme Option */}
+              <div
+                onClick={() => setTheme('dark')}
+                className={`p-4 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
+                  theme === 'dark'
+                    ? 'bg-primary/10 border-primary shadow-orange-glow'
+                    : 'bg-surface border-border hover:border-border-light'
+                }`}
+              >
+                <div className="p-2.5 rounded-xl bg-gray-900 border border-gray-700 text-amber-400">
+                  <Moon className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-text-primary text-sm">Signature Dark UI</span>
+                    {theme === 'dark' && (
+                      <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                    High-contrast dark palette (#050B10) with amber-orange accents for low-light environments.
+                  </p>
+                </div>
+              </div>
+
+              {/* Light Theme Option */}
+              <div
+                onClick={() => setTheme('light')}
+                className={`p-4 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
+                  theme === 'light'
+                    ? 'bg-primary/10 border-primary shadow-orange-glow'
+                    : 'bg-surface border-border hover:border-border-light'
+                }`}
+              >
+                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-600">
+                  <Sun className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-text-primary text-sm">Crisp Executive Light UI</span>
+                    {theme === 'light' && (
+                      <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                    Clean, high-clarity daylight theme (#F8FAFC) optimized for bright daytime office and audit work.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

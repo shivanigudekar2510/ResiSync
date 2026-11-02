@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from '../common/Modal';
+import { ThemeToggle } from '../common/ThemeToggle';
 import api from '../../services/api';
 
 interface TopNavbarProps {
@@ -90,6 +91,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onToggleSidebar }) => {
             <span className="w-2 h-2 rounded-full bg-status-success live-pulse" />
             <span className="text-text-secondary text-[11px] font-medium">IoT Grid Normal</span>
           </div>
+
+          {/* Theme Toggle (Dark / Light) */}
+          <ThemeToggle />
 
           {/* Notifications Dropdown */}
           <div className="relative">

@@ -14,13 +14,17 @@ import {
   CheckCircle2,
   Shield,
   Key,
+  Sun,
+  Moon,
 } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 import { Modal } from '../../components/common/Modal';
 import api from '../../services/api';
 
 export const ResidentProfile: React.FC = () => {
   const { user, refreshUser } = useAuth();
   const { showToast } = useNotification();
+  const { theme, setTheme } = useTheme();
 
   // Family modal
   const [showFamilyModal, setShowFamilyModal] = useState(false);
@@ -257,6 +261,73 @@ export const ResidentProfile: React.FC = () => {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      </div>
+
+
+      {/* Interface Theme & Display Settings */}
+      <div className="bg-card rounded-panel border border-border p-6 shadow-card space-y-4">
+        <div>
+          <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider">
+            Display Theme & Interface Mode
+          </h3>
+          <p className="text-xs text-text-secondary mt-1">
+            Toggle between signature dark mode and crisp daylight light mode across all resident views.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div
+            onClick={() => setTheme('dark')}
+            className={`p-4 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
+              theme === 'dark'
+                ? 'bg-primary/10 border-primary shadow-orange-glow'
+                : 'bg-surface border-border hover:border-border-light'
+            }`}
+          >
+            <div className="p-2.5 rounded-xl bg-gray-900 border border-gray-700 text-amber-400">
+              <Moon className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-text-primary text-sm">Signature Dark UI</span>
+                {theme === 'dark' && (
+                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
+                    Active
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-text-muted mt-1">
+                Subtle dark backdrop (#050B10) with orange accents for comfortable night viewing.
+              </p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setTheme('light')}
+            className={`p-4 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
+              theme === 'light'
+                ? 'bg-primary/10 border-primary shadow-orange-glow'
+                : 'bg-surface border-border hover:border-border-light'
+            }`}
+          >
+            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-600">
+              <Sun className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-text-primary text-sm">Crisp Light UI</span>
+                {theme === 'light' && (
+                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
+                    Active
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-text-muted mt-1">
+                Bright white theme (#F8FAFC) engineered for high clarity in sunlit spaces.
+              </p>
+            </div>
           </div>
         </div>
       </div>
