@@ -383,6 +383,52 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     } as any);
   }
 
+  // ================= 1B. AUTH: REGISTER RESIDENT =================
+  if (endpoint === '/auth/register' && method === 'POST') {
+    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
+    const email = (body.email || '').toLowerCase().trim();
+
+    const existing = users.find((u) => u.email.toLowerCase() === email);
+    if (existing) {
+      return Promise.resolve({
+        success: false,
+        message: 'An account with this email address already exists.',
+      } as any);
+    }
+
+    const newResident = {
+      id: `user-resident-${Date.now()}`,
+      name: body.name || 'Resident Member',
+      email: email,
+      phone: body.phone || '+91 98000 00000',
+      role: 'RESIDENT',
+      flatId: `flat-${(body.flatNumber || 'A-301').toLowerCase().replace(/\s+/g, '-')}`,
+      flat: { flatNumber: body.flatNumber || 'A-301', floorNumber: 3, bhkType: '3 BHK' },
+      societyId: 'soc-greenview-01',
+      societyCode: body.societyCode || 'GRNVW-2026',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      residentProfile: {
+        occupancyType: 'OWNER',
+        emergencyContactName: 'Family Member',
+        emergencyContactPhone: body.phone || '+91 98000 00000',
+      },
+      familyMembers: [],
+      vehicles: [],
+    };
+
+    users.push(newResident);
+    setStored(STORAGE_KEYS.USERS, users);
+
+    const mockToken = `resisync-mock-jwt-${newResident.id}-${Date.now()}`;
+
+    return Promise.resolve({
+      success: true,
+      token: mockToken,
+      user: newResident,
+      message: 'Resident account created successfully!',
+    } as any);
+  }
+
   // ================= 2. AUTH: LOGIN =================
   if (endpoint === '/auth/login' && method === 'POST') {
     const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
@@ -430,11 +476,48 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     const totalPending = bills
       .filter((b) => b.status === 'PENDING')
       .reduce((sum, b) => sum + b.totalAmount, 0);
+    const totalCollected = bills
+      .filter((b) => b.status === 'PAID')
+      .reduce((sum, b) => sum + b.totalAmount, 0);
+    const totalBilled = totalPending + totalCollected;
+    const collectionRate = totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 100;
 
     return Promise.resolve({
       success: true,
       totalPending,
       bills,
+      metrics: {
+        totalBilled,
+        totalCollected,
+        totalPending,
+        collectionRate,
+      },
+    } as any);
+  }
+
+  if (endpoint === '/maintenance' && method === 'POST') {
+    const bills = getStored<any[]>(STORAGE_KEYS.BILLS, DEFAULT_BILLS);
+    const newBill = {
+      id: `bill-${Date.now()}`,
+      billNumber: `BILL-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      month: body.month || 'November',
+      year: body.year || 2026,
+      dueDate: body.dueDate || new Date(Date.now() + 86400000 * 15).toISOString(),
+      baseAmount: Number(body.amount || body.baseAmount || 4200),
+      waterCharges: 600,
+      sinkingFund: 400,
+      totalAmount: Number(body.amount || body.baseAmount || 4200) + 1000,
+      status: 'PENDING',
+      createdAt: new Date().toISOString(),
+      flat: { flatNumber: body.flatNumber || 'A-402' },
+    };
+    bills.unshift(newBill);
+    setStored(STORAGE_KEYS.BILLS, bills);
+
+    return Promise.resolve({
+      success: true,
+      bill: newBill,
+      message: 'Maintenance bill generated successfully.',
     } as any);
   }
 
@@ -518,12 +601,83 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     } as any);
   }
 
+  if (endpoint.includes('/check-out') && method === 'POST') {
+    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
+    const visId = endpoint.split('/')[2];
+    const target = visitors.find((v) => v.id === visId) || visitors[0];
+    if (target) {
+      target.status = 'CHECKED_OUT';
+      target.checkOutTime = new Date().toISOString();
+      setStored(STORAGE_KEYS.VISITORS, visitors);
+    }
+
+    return Promise.resolve({
+      success: true,
+      visitor: target,
+      message: 'Visitor checked out successfully',
+    } as any);
+  }
+
+  if (endpoint.includes('/status') && endpoint.startsWith('/visitors') && method === 'PATCH') {
+    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
+    const visId = endpoint.split('/')[2];
+    const target = visitors.find((v) => v.id === visId) || visitors[0];
+    if (target) {
+      target.status = body.status || 'APPROVED';
+      setStored(STORAGE_KEYS.VISITORS, visitors);
+    }
+
+    return Promise.resolve({
+      success: true,
+      visitor: target,
+      message: `Visitor status updated to ${body.status}`,
+    } as any);
+  }
+
   // ================= 6. AMENITIES =================
   if (endpoint === '/amenities' && method === 'GET') {
     const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, DEFAULT_AMENITIES);
     return Promise.resolve({
       success: true,
       amenities,
+    } as any);
+  }
+
+  if (endpoint.startsWith('/amenities/') && method === 'PATCH') {
+    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, DEFAULT_AMENITIES);
+    const amenId = endpoint.split('/')[2];
+    const index = amenities.findIndex((a) => a.id === amenId);
+    if (index >= 0) {
+      amenities[index] = { ...amenities[index], ...body };
+      setStored(STORAGE_KEYS.AMENITIES, amenities);
+      return Promise.resolve({
+        success: true,
+        amenity: amenities[index],
+        message: 'Amenity settings updated successfully.',
+      } as any);
+    }
+    return Promise.resolve({ success: true, message: 'Amenity updated' } as any);
+  }
+
+  if (endpoint === '/bookings/my' && method === 'GET') {
+    const defaultBookings = [
+      {
+        id: 'book-01',
+        amenityId: 'amen-01',
+        bookingDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        startTime: '07:00',
+        endTime: '08:00',
+        guestsCount: 2,
+        status: 'CONFIRMED',
+        totalFee: 0,
+        createdAt: new Date().toISOString(),
+        amenity: DEFAULT_AMENITIES[0],
+      },
+    ];
+    const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, defaultBookings);
+    return Promise.resolve({
+      success: true,
+      bookings,
     } as any);
   }
 
@@ -548,6 +702,20 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
       success: true,
       booking: newBooking,
       message: 'Amenity slot reserved successfully!',
+    } as any);
+  }
+
+  if (endpoint.includes('/cancel') && endpoint.startsWith('/bookings') && method === 'POST') {
+    const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []);
+    const bookId = endpoint.split('/')[2];
+    const target = bookings.find((b) => b.id === bookId);
+    if (target) {
+      target.status = 'CANCELLED';
+      setStored(STORAGE_KEYS.BOOKINGS, bookings);
+    }
+    return Promise.resolve({
+      success: true,
+      message: 'Amenity booking cancelled successfully.',
     } as any);
   }
 
@@ -585,12 +753,71 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     } as any);
   }
 
+  if (endpoint.includes('/comments') && method === 'POST') {
+    const complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, DEFAULT_COMPLAINTS);
+    const compId = endpoint.split('/')[2];
+    const target = complaints.find((c) => c.id === compId);
+    const newComment = {
+      id: `com-${Date.now()}`,
+      authorName: 'Rahul Sharma (You)',
+      authorRole: 'RESIDENT',
+      message: body.message,
+      createdAt: new Date().toISOString(),
+    };
+    if (target) {
+      target.comments = target.comments || [];
+      target.comments.push(newComment);
+      setStored(STORAGE_KEYS.COMPLAINTS, complaints);
+    }
+    return Promise.resolve({
+      success: true,
+      comment: newComment,
+      message: 'Comment posted successfully',
+    } as any);
+  }
+
+  if (endpoint.includes('/status') && endpoint.startsWith('/complaints') && method === 'PATCH') {
+    const complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, DEFAULT_COMPLAINTS);
+    const compId = endpoint.split('/')[2];
+    const target = complaints.find((c) => c.id === compId);
+    if (target) {
+      target.status = body.status || target.status;
+      if (body.assignedStaffName) target.assignedStaffName = body.assignedStaffName;
+      setStored(STORAGE_KEYS.COMPLAINTS, complaints);
+    }
+    return Promise.resolve({
+      success: true,
+      complaint: target,
+      message: 'Helpdesk ticket status updated successfully',
+    } as any);
+  }
+
   // ================= 8. ANNOUNCEMENTS =================
-  if (endpoint === '/announcements' && method === 'GET') {
+  if (endpoint.startsWith('/announcements') && method === 'GET') {
     const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, DEFAULT_ANNOUNCEMENTS);
     return Promise.resolve({
       success: true,
       announcements,
+    } as any);
+  }
+
+  if (endpoint === '/announcements' && method === 'POST') {
+    const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, DEFAULT_ANNOUNCEMENTS);
+    const newNotice = {
+      id: `anc-${Date.now()}`,
+      title: body.title,
+      content: body.content,
+      category: body.category || 'GENERAL',
+      priority: body.priority || 'MEDIUM',
+      authorName: 'Priya Patel (Facility Admin)',
+      createdAt: new Date().toISOString(),
+    };
+    announcements.unshift(newNotice);
+    setStored(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+    return Promise.resolve({
+      success: true,
+      announcement: newNotice,
+      message: 'Notice broadcasted to society residents and staff successfully.',
     } as any);
   }
 
@@ -797,6 +1024,21 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
       } as any);
     }
 
+    if (endpoint.includes('/collect') && method === 'PATCH') {
+      const delId = endpoint.split('/')[2];
+      const target = deliveries.find((d: any) => d.id === delId);
+      if (target) {
+        target.status = 'COLLECTED';
+        target.collectedTime = new Date().toISOString();
+        setStored(STORAGE_KEYS.DELIVERIES, deliveries);
+      }
+      return Promise.resolve({
+        success: true,
+        delivery: target,
+        message: 'Package marked as collected by resident.',
+      } as any);
+    }
+
     return Promise.resolve({
       success: true,
       deliveries,
@@ -928,19 +1170,57 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     return Promise.resolve({ success: true, user: updatedUsers[0], message: 'Profile updated successfully' } as any);
   }
 
-  if (endpoint === '/users/family') {
-    return Promise.resolve({ success: true, member: { id: `fam-${Date.now()}`, ...body } } as any);
+  if (endpoint === '/users/family' && method === 'POST') {
+    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
+    const newMember = {
+      id: `fam-${Date.now()}`,
+      name: body.name || 'Family Member',
+      relation: body.relation || 'Dependent',
+      phone: body.phone || '+91 98000 00000',
+      age: Number(body.age) || 25,
+    };
+    if (users[0]) {
+      users[0].familyMembers = users[0].familyMembers || [];
+      users[0].familyMembers.push(newMember);
+      setStored(STORAGE_KEYS.USERS, users);
+    }
+    return Promise.resolve({ success: true, member: newMember } as any);
   }
 
   if (endpoint.startsWith('/users/family/') && method === 'DELETE') {
+    const famId = endpoint.split('/')[3];
+    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
+    if (users[0] && users[0].familyMembers) {
+      users[0].familyMembers = users[0].familyMembers.filter((f: any) => f.id !== famId);
+      setStored(STORAGE_KEYS.USERS, users);
+    }
     return Promise.resolve({ success: true } as any);
   }
 
-  if (endpoint === '/users/vehicles') {
-    return Promise.resolve({ success: true, vehicle: { id: `veh-${Date.now()}`, ...body } } as any);
+  if (endpoint === '/users/vehicles' && method === 'POST') {
+    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
+    const newVehicle = {
+      id: `veh-${Date.now()}`,
+      vehicleType: body.vehicleType || 'FOUR_WHEELER',
+      vehicleNumber: body.vehicleNumber || 'KA 01 AB 1234',
+      parkingSlot: body.parkingSlot || 'P-402',
+      makeModel: body.makeModel || 'Personal Vehicle',
+    };
+    if (users[0]) {
+      users[0].vehicles = users[0].vehicles || [];
+      users[0].vehicles.push(newVehicle);
+      setStored(STORAGE_KEYS.USERS, users);
+    }
+    return Promise.resolve({ success: true, vehicle: newVehicle } as any);
   }
 
   if (endpoint.startsWith('/users/vehicles/') && method === 'DELETE') {
+    const vehId = endpoint.split('/')[3];
+    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
+    if (users[0] && users[0].vehicles) {
+      users[0].vehicles = users[0].vehicles.filter((v: any) => v.id !== vehId);
+      setStored(STORAGE_KEYS.USERS, users);
+    }
     return Promise.resolve({ success: true } as any);
   }
 

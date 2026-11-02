@@ -161,3 +161,4 @@ jobs:
           else
             echo "⚠️ Health check returned status $STATUS (or server not yet configured)."
           fi
+

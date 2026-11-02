@@ -33,14 +33,6 @@ export const WelcomePage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'security' | 'billing' | 'amenities' | 'iot'>('security');
 
-  useEffect(() => {
-    if (isAuthenticated && role) {
-      if (role === 'RESIDENT') navigate('/resident/dashboard');
-      else if (role === 'SECURITY') navigate('/security/dashboard');
-      else if (role === 'ADMIN') navigate('/admin/dashboard');
-    }
-  }, [isAuthenticated, role, navigate]);
-
   const handleDemoLogin = async (targetRole: 'RESIDENT' | 'SECURITY' | 'ADMIN') => {
     await quickLogin(targetRole);
     if (targetRole === 'RESIDENT') navigate('/resident/dashboard');
@@ -76,19 +68,35 @@ export const WelcomePage: React.FC = () => {
 
         {/* Right Action CTAs */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/login')}
-            className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-text-primary hover:border-primary/50 hover:bg-card transition"
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => navigate('/register-society')}
-            className="px-4 py-2 rounded-xl bg-primary text-background text-xs font-bold hover:bg-primary-hover shadow-orange-glow transition flex items-center gap-1.5"
-          >
-            <span>Onboard Society</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={() => {
+                if (role === 'RESIDENT') navigate('/resident/dashboard');
+                else if (role === 'SECURITY') navigate('/security/dashboard');
+                else if (role === 'ADMIN') navigate('/admin/dashboard');
+              }}
+              className="px-4 py-2 rounded-xl bg-primary text-background text-xs font-bold hover:bg-primary-hover shadow-orange-glow transition flex items-center gap-1.5"
+            >
+              <span>Go to Dashboard</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-text-primary hover:border-primary/50 hover:bg-card transition"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => navigate('/register-society')}
+                className="px-4 py-2 rounded-xl bg-primary text-background text-xs font-bold hover:bg-primary-hover shadow-orange-glow transition flex items-center gap-1.5"
+              >
+                <span>Onboard Society</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
         </div>
       </header>
 

@@ -144,3 +144,4 @@ networks:
     internal: true
   resisync-public:
     driver: bridge
+

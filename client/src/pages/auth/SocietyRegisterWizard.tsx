@@ -153,6 +153,10 @@ export const SocietyRegisterWizard: React.FC = () => {
 
       if (res.success) {
         setRegisteredSociety(res);
+        try {
+          localStorage.setItem('resisync_society_name', res.society?.name || societyName);
+          localStorage.setItem('resisync_society_code', res.societyCode || 'PRSTG-2026');
+        } catch {}
         if (setAuthUser) {
           setAuthUser(res.user, res.token);
         }

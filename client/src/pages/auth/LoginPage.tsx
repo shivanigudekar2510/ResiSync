@@ -47,10 +47,11 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(null);
     try {
-      await login(identifier, password);
-      if (selectedRole === 'RESIDENT') navigate('/resident/dashboard');
-      else if (selectedRole === 'SECURITY') navigate('/security/dashboard');
-      else if (selectedRole === 'ADMIN') navigate('/admin/dashboard');
+      const loggedUser = await login(identifier, password);
+      const roleToNavigate = loggedUser?.role || selectedRole;
+      if (roleToNavigate === 'RESIDENT') navigate('/resident/dashboard');
+      else if (roleToNavigate === 'SECURITY') navigate('/security/dashboard');
+      else if (roleToNavigate === 'ADMIN') navigate('/admin/dashboard');
       else navigate('/resident/dashboard');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please verify your credentials.');
@@ -60,10 +61,11 @@ export const LoginPage: React.FC = () => {
   const handleInstantLaunch = async (role: 'RESIDENT' | 'SECURITY' | 'ADMIN') => {
     setError(null);
     try {
-      await quickLogin(role);
-      if (role === 'RESIDENT') navigate('/resident/dashboard');
-      else if (role === 'SECURITY') navigate('/security/dashboard');
-      else if (role === 'ADMIN') navigate('/admin/dashboard');
+      const loggedUser = await quickLogin(role);
+      const roleToNavigate = loggedUser?.role || role;
+      if (roleToNavigate === 'RESIDENT') navigate('/resident/dashboard');
+      else if (roleToNavigate === 'SECURITY') navigate('/security/dashboard');
+      else if (roleToNavigate === 'ADMIN') navigate('/admin/dashboard');
     } catch (err: any) {
       setError(err.message || 'Quick login failed');
     }

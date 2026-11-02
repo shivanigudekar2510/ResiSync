@@ -113,7 +113,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
         {/* Current Society & Flat Pill */}
         <div className="p-3 mx-3 my-3 rounded-xl bg-card border border-border/80">
           <div className="flex items-center justify-between text-[11px] font-semibold text-text-secondary">
-            <span className="truncate">Greenview Residency</span>
+            <span className="truncate">{(user as any)?.society?.name || localStorage.getItem('resisync_society_name') || 'Greenview Residency'}</span>
             <span className="w-2 h-2 rounded-full bg-status-success live-pulse" title="System Online" />
           </div>
           <div className="flex items-center justify-between mt-1 text-xs">

@@ -9,8 +9,8 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (identifier: string, password: string) => Promise<void>;
-  quickLogin: (role: UserRole) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<User | null>;
+  quickLogin: (role: UserRole) => Promise<User | null>;
   register: (payload: any) => Promise<void>;
   setAuthUser: (user: any, token: string) => void;
   logout: () => void;
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (identifier: string, password: string) => {
+  const login = async (identifier: string, password: string): Promise<User | null> => {
     setIsLoading(true);
     try {
       const res = await api.login(identifier, password);
@@ -61,17 +61,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTokenState(res.token);
         setUser(res.user);
         getSocket(res.token);
+        return res.user;
       }
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const quickLogin = async (targetRole: UserRole) => {
+  const quickLogin = async (targetRole: UserRole): Promise<User | null> => {
     let email = 'resident@resisync.com';
     if (targetRole === 'SECURITY') email = 'guard@resisync.com';
     if (targetRole === 'ADMIN') email = 'admin@resisync.com';
-    await login(email, 'password123');
+    return await login(email, 'password123');
   };
 
   const register = async (payload: any) => {
