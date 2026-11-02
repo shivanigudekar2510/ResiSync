@@ -157,6 +157,73 @@ export const AdminDashboard: React.FC = () => {
         />
       </div>
 
+      {/* Operational Modules Fast Access Ribbon */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          onClick={() => window.location.href = '/admin/maintenance'}
+          className="p-4 rounded-xl bg-card hover:bg-card-hover border border-border hover:border-primary/50 cursor-pointer transition flex items-center justify-between group shadow-card"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center group-hover:scale-105 transition">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white group-hover:text-primary transition">Maintenance & Billing</p>
+              <p className="text-[11px] text-text-secondary">Dues, Cycles & Receipts</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-text-muted group-hover:text-primary transition" />
+        </div>
+
+        <div
+          onClick={() => window.location.href = '/admin/visitors'}
+          className="p-4 rounded-xl bg-card hover:bg-card-hover border border-border hover:border-status-info/50 cursor-pointer transition flex items-center justify-between group shadow-card"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-status-info/15 text-status-info flex items-center justify-center group-hover:scale-105 transition">
+              <UserCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white group-hover:text-status-info transition">Visitor Gate Logs</p>
+              <p className="text-[11px] text-text-secondary">QR Passes & Entries</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-text-muted group-hover:text-status-info transition" />
+        </div>
+
+        <div
+          onClick={() => window.location.href = '/admin/announcements'}
+          className="p-4 rounded-xl bg-card hover:bg-card-hover border border-border hover:border-status-warning/50 cursor-pointer transition flex items-center justify-between group shadow-card"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-status-warning/15 text-status-warning flex items-center justify-center group-hover:scale-105 transition">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white group-hover:text-status-warning transition">Noticeboard Broadcasts</p>
+              <p className="text-[11px] text-text-secondary">Alerts & Circulars</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-text-muted group-hover:text-status-warning transition" />
+        </div>
+
+        <div
+          onClick={() => window.location.href = '/admin/complaints'}
+          className="p-4 rounded-xl bg-card hover:bg-card-hover border border-border hover:border-status-danger/50 cursor-pointer transition flex items-center justify-between group shadow-card"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-status-danger/15 text-status-danger flex items-center justify-center group-hover:scale-105 transition">
+              <LifeBuoy className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white group-hover:text-status-danger transition">Helpdesk Ticketing</p>
+              <p className="text-[11px] text-text-secondary">Complaints & Assignments</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-text-muted group-hover:text-status-danger transition" />
+        </div>
+      </div>
+
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Collection Trend */}

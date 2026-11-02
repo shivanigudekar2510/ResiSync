@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (identifier: string, password: string) => Promise<void>;
   quickLogin: (role: UserRole) => Promise<void>;
   register: (payload: any) => Promise<void>;
+  setAuthUser: (user: any, token: string) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -88,6 +89,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const setAuthUser = (newUser: any, newToken: string) => {
+    api.setToken(newToken);
+    setTokenState(newToken);
+    setUser(newUser);
+    getSocket(newToken);
+  };
+
   const logout = () => {
     api.setToken(null);
     setTokenState(null);
@@ -117,6 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         quickLogin,
         register,
+        setAuthUser,
         logout,
         refreshUser,
       }}

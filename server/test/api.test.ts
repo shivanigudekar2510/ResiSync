@@ -487,6 +487,45 @@ async function runTests() {
       results.push({ name: 'Admin Analytics & Society Health Metrics', passed: false, error: JSON.stringify(analyticsRes.data) });
     }
 
+    // 15. Multi-Step Society Onboarding Wizard API
+    const randCode = Math.floor(1000 + Math.random() * 9000);
+    const registerSocietyRes = await request({
+      method: 'POST',
+      path: '/api/auth/register-society',
+      body: {
+        societyName: `Prestige Falcon City ${randCode}`,
+        reraId: `PRM/KA/RERA/${randCode}`,
+        address: 'Kanakapura Main Road',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        zipCode: '560062',
+        wings: ['Tower Alpha', 'Tower Beta'],
+        totalFlats: 160,
+        adminName: `President ${randCode}`,
+        adminEmail: `president${randCode}@falconcity.com`,
+        adminPhone: `+91 99000 ${randCode}`,
+        adminPassword: 'password123',
+        amenities: ['Club House', 'Swimming Pool', 'Fitness Gym'],
+      },
+    });
+    if (registerSocietyRes.status === 201 && registerSocietyRes.data.societyCode) {
+      results.push({ name: 'Multi-Step Society Onboarding Wizard API', passed: true });
+    } else {
+      results.push({ name: 'Multi-Step Society Onboarding Wizard API', passed: false, error: JSON.stringify(registerSocietyRes.data) });
+    }
+
+    // 16. Firebase Integration & Cloud Sync Diagnostics
+    const firebaseTestRes = await request({
+      method: 'POST',
+      path: '/api/admin/firebase-test',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    if (firebaseTestRes.status === 200 && firebaseTestRes.data.checks?.length === 5) {
+      results.push({ name: 'Firebase Integration & Cloud Sync Diagnostics', passed: true });
+    } else {
+      results.push({ name: 'Firebase Integration & Cloud Sync Diagnostics', passed: false, error: JSON.stringify(firebaseTestRes.data) });
+    }
+
   } catch (err: any) {
     console.error('Unhandled test failure:', err);
   } finally {

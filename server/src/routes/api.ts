@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   login,
   register,
+  registerSociety,
   getMe,
   forgotPassword,
   changePassword,
@@ -64,6 +65,9 @@ import {
   getAuditLogs,
   getNotifications,
   markNotificationRead,
+  getFirebaseConfig,
+  updateFirebaseConfig,
+  testFirebaseConnection,
 } from '../controllers/adminController.js';
 import {
   updateProfile,
@@ -79,6 +83,7 @@ const router = Router();
 // ================= AUTH ROUTES =================
 router.post('/auth/login', login);
 router.post('/auth/register', register);
+router.post('/auth/register-society', registerSociety);
 router.post('/auth/forgot-password', forgotPassword);
 router.get('/auth/me', authenticateToken, getMe);
 router.post('/auth/change-password', authenticateToken, changePassword);
@@ -150,6 +155,11 @@ router.get('/admin/flats', authenticateToken, requireRole('ADMIN', 'SECURITY'), 
 router.post('/admin/flats', authenticateToken, requireRole('ADMIN'), createFlat);
 router.get('/admin/residents', authenticateToken, requireRole('ADMIN'), getResidents);
 router.get('/admin/audit-logs', authenticateToken, requireRole('ADMIN'), getAuditLogs);
+
+// ================= FIREBASE & CLOUD SYNC =================
+router.get('/admin/firebase-config', authenticateToken, requireRole('ADMIN'), getFirebaseConfig);
+router.post('/admin/firebase-config', authenticateToken, requireRole('ADMIN'), updateFirebaseConfig);
+router.post('/admin/firebase-test', authenticateToken, requireRole('ADMIN'), testFirebaseConnection);
 
 export default router;
 

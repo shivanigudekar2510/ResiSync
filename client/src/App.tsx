@@ -8,6 +8,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { WelcomePage } from './pages/welcome/WelcomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { SocietyRegisterWizard } from './pages/auth/SocietyRegisterWizard';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 
 // Resident Pages
@@ -96,6 +97,7 @@ export const App: React.FC = () => {
             <Route path="/welcome" element={<WelcomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register-society" element={<SocietyRegisterWizard />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
             {/* Root Dispatcher */}

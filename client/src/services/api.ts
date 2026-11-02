@@ -67,6 +67,13 @@ class ApiService {
     });
   }
 
+  registerSociety(payload: any) {
+    return this.request<{ success: boolean; token: string; user: any; society: any; societyCode: string; message: string }>('/auth/register-society', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   getMe() {
     return this.request<{ success: boolean; user: any }>('/auth/me');
   }
@@ -325,6 +332,33 @@ class ApiService {
 
   getAuditLogs() {
     return this.request<{ success: boolean; logs: any[] }>('/admin/audit-logs');
+  }
+
+  // Firebase & Cloud Sync
+  getFirebaseConfig() {
+    return this.request<{ success: boolean; config: any; telemetry: any }>('/admin/firebase-config');
+  }
+
+  updateFirebaseConfig(payload: any) {
+    return this.request<{ success: boolean; message: string; config: any }>('/admin/firebase-config', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  testFirebaseConnection() {
+    return this.request<{
+      success: boolean;
+      message: string;
+      timestamp: string;
+      overallLatencyMs: number;
+      projectId: string;
+      syncMode: string;
+      checks: Array<{ check: string; status: string; latencyMs: number }>;
+      activeCollectionsCount: number;
+    }>('/admin/firebase-test', {
+      method: 'POST',
+    });
   }
 
   // Notifications
