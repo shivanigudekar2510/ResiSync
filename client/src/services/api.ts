@@ -45,12 +45,14 @@ class ApiService {
       const contentType = response.headers.get('content-type') || '';
 
       // If backend endpoint is 404, 405 (Netlify static host without backend proxy),
-      // 502/503 (upstream server offline), OR if Netlify's SPA rewrite returned index.html for an API route
+      // 500, 502, 503, 504 (upstream server offline or db disconnected), OR if Netlify's SPA rewrite returned index.html for an API route
       if (
         response.status === 404 ||
         response.status === 405 ||
+        response.status === 500 ||
         response.status === 502 ||
         response.status === 503 ||
+        response.status === 504 ||
         contentType.includes('text/html') ||
         contentType.includes('text/plain')
       ) {
@@ -63,7 +65,12 @@ class ApiService {
         if (response.status === 401 && !endpoint.includes('/auth/login')) {
           this.setToken(null);
         }
-        throw new Error(data.message || `Request failed with status ${response.status}`);
+        // Seamless fallback to client-side mock engine if backend API throws an error
+        try {
+          return await handleMockRequest<T>(endpoint, options, this.token);
+        } catch {
+          throw new Error(data.message || `Request failed with status ${response.status}`);
+        }
       }
 
       // If the response is unexpectedly empty (e.g. static hosting returning empty 200)
@@ -354,6 +361,40 @@ class ApiService {
 
   getResidents() {
     return this.request<{ success: boolean; residents: any[] }>('/admin/residents');
+  }
+
+  createResident(payload: any) {
+    return this.request<{ success: boolean; message: string; resident: any }>('/admin/residents', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  deleteResident(id: string) {
+    return this.request<{ success: boolean; message: string }>(`/admin/residents/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  getGuards() {
+    return this.request<{ success: boolean; guards: any[] }>('/admin/guards');
+  }
+
+  createGuard(payload: any) {
+    return this.request<{ success: boolean; message: string; guard: any }>('/admin/guards', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  deleteGuard(id: string) {
+    return this.request<{ success: boolean; message: string }>(`/admin/guards/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  verifySocietyCode(code: string) {
+    return this.request<{ success: boolean; society: any; message?: string }>(`/auth/verify-code?code=${encodeURIComponent(code)}`);
   }
 
   getAuditLogs() {

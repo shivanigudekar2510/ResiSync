@@ -98,6 +98,206 @@ export const getResidents = async (req: AuthRequest, res: Response, next: NextFu
   }
 };
 
+export const createResident = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { name, email, phone, flatId, occupancyType, password } = req.body;
+    const societyId = req.user!.societyId;
+
+    if (!societyId) {
+      res.status(400).json({ success: false, message: 'Society ID required' });
+      return;
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: (email || '').toLowerCase().trim() },
+    });
+    if (existingUser) {
+      res.status(400).json({ success: false, message: 'A resident with this email already exists' });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password || 'password123', 10);
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          phone: phone.trim(),
+          password: hashedPassword,
+          role: 'RESIDENT',
+          flatId: flatId || null,
+        },
+      });
+
+      if (flatId) {
+        await tx.flat.update({
+          where: { id: flatId },
+          data: { status: 'OCCUPIED' },
+        });
+
+        await tx.residentProfile.create({
+          data: {
+            userId: user.id,
+            flatId,
+            occupancyType: occupancyType || 'OWNER',
+          },
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          societyId,
+          userId: req.user!.id,
+          action: 'RESIDENT_ADDED',
+          entityType: 'USER',
+          entityId: user.id,
+          details: `Admin added resident ${user.name} (${user.email})`,
+        },
+      });
+
+      return user;
+    });
+
+    res.status(201).json({ success: true, message: 'Resident added successfully', resident: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteResident = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const societyId = req.user!.societyId;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: { flat: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ success: false, message: 'Resident not found' });
+      return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (user.flatId) {
+        await tx.flat.update({
+          where: { id: user.flatId },
+          data: { status: 'VACANT' },
+        });
+      }
+      await tx.residentProfile.deleteMany({ where: { userId: id } });
+      await tx.user.delete({ where: { id } });
+
+      if (societyId) {
+        await tx.auditLog.create({
+          data: {
+            societyId,
+            userId: req.user!.id,
+            action: 'RESIDENT_REMOVED',
+            entityType: 'USER',
+            entityId: id,
+            details: `Admin removed resident ${user.name}`,
+          },
+        });
+      }
+    });
+
+    res.json({ success: true, message: 'Resident removed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getGuards = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const guards = await prisma.user.findMany({
+      where: { role: 'SECURITY' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    res.json({ success: true, count: guards.length, guards });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createGuard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { name, email, phone, gateName, shift, password } = req.body;
+    const societyId = req.user!.societyId;
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: (email || '').toLowerCase().trim() },
+    });
+    if (existingUser) {
+      res.status(400).json({ success: false, message: 'A guard with this email already exists' });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password || 'password123', 10);
+
+    const guard = await prisma.user.create({
+      data: {
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        phone: phone.trim(),
+        password: hashedPassword,
+        role: 'SECURITY',
+      },
+    });
+
+    if (societyId) {
+      await prisma.auditLog.create({
+        data: {
+          societyId,
+          userId: req.user!.id,
+          action: 'GUARD_ADDED',
+          entityType: 'USER',
+          entityId: guard.id,
+          details: `Admin registered security guard ${guard.name} for ${gateName || 'Main Gate'}`,
+        },
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Security Guard registered successfully',
+      guard: {
+        id: guard.id,
+        name: guard.name,
+        email: guard.email,
+        phone: guard.phone,
+        role: guard.role,
+        gateName: gateName || 'Main Security Gate',
+        shift: shift || 'Day Shift',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteGuard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    await prisma.user.delete({ where: { id } });
+    res.json({ success: true, message: 'Guard removed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getAuditLogs = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const societyId = req.user!.societyId;

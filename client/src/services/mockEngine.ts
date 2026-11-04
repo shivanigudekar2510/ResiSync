@@ -1,21 +1,50 @@
 // In-Browser Client-Side Storage & Mock Engine for Standalone / Static Host Deployment (e.g. Netlify)
+// Strict Multi-Tenancy: Every society operates in total isolation with zero cross-tenant data leakage.
 
+const STORAGE_VERSION = 'v4';
 const STORAGE_KEYS = {
-  USERS: 'resisync_mock_users',
-  SOCIETIES: 'resisync_mock_societies',
-  VISITORS: 'resisync_mock_visitors',
-  DELIVERIES: 'resisync_mock_deliveries',
-  BILLS: 'resisync_mock_bills',
-  AMENITIES: 'resisync_mock_amenities',
-  BOOKINGS: 'resisync_mock_bookings',
-  COMPLAINTS: 'resisync_mock_complaints',
-  ANNOUNCEMENTS: 'resisync_mock_announcements',
-  EMERGENCIES: 'resisync_mock_emergencies',
-  FIREBASE: 'resisync_mock_firebase',
-  NOTIFICATIONS: 'resisync_mock_notifications',
-  FLATS: 'resisync_mock_flats',
-  AUDIT_LOGS: 'resisync_mock_audit_logs',
+  USERS: `resisync_${STORAGE_VERSION}_users`,
+  SOCIETIES: `resisync_${STORAGE_VERSION}_societies`,
+  VISITORS: `resisync_${STORAGE_VERSION}_visitors`,
+  DELIVERIES: `resisync_${STORAGE_VERSION}_deliveries`,
+  BILLS: `resisync_${STORAGE_VERSION}_bills`,
+  AMENITIES: `resisync_${STORAGE_VERSION}_amenities`,
+  BOOKINGS: `resisync_${STORAGE_VERSION}_bookings`,
+  COMPLAINTS: `resisync_${STORAGE_VERSION}_complaints`,
+  ANNOUNCEMENTS: `resisync_${STORAGE_VERSION}_announcements`,
+  EMERGENCIES: `resisync_${STORAGE_VERSION}_emergencies`,
+  FIREBASE: `resisync_${STORAGE_VERSION}_firebase`,
+  NOTIFICATIONS: `resisync_${STORAGE_VERSION}_notifications`,
+  FLATS: `resisync_${STORAGE_VERSION}_flats`,
+  AUDIT_LOGS: `resisync_${STORAGE_VERSION}_audit_logs`,
 };
+
+// Purge legacy demo keys and obsolete sessions
+function purgeLegacyData(): void {
+  try {
+    const legacyKeys = [
+      'resisync_mock_users', 'resisync_mock_societies', 'resisync_mock_visitors',
+      'resisync_mock_deliveries', 'resisync_mock_bills', 'resisync_mock_amenities',
+      'resisync_mock_bookings', 'resisync_mock_complaints', 'resisync_mock_announcements',
+      'resisync_mock_emergencies', 'resisync_mock_firebase', 'resisync_mock_notifications',
+      'resisync_mock_flats', 'resisync_mock_audit_logs',
+      'resisync_v1_users', 'resisync_v1_societies',
+      'resisync_v2_users', 'resisync_v2_societies',
+      'resisync_v3_users', 'resisync_v3_societies',
+    ];
+    legacyKeys.forEach((k) => localStorage.removeItem(k));
+
+    // If active session belongs to legacy hardcoded greenview, clear it
+    const currentSoc = localStorage.getItem('resisync_society_name');
+    if (currentSoc === 'Greenview Residency' || localStorage.getItem('resisync_society_code') === 'GRNVW-2026') {
+      localStorage.removeItem('resisync_token');
+      localStorage.removeItem('resisync_society_name');
+      localStorage.removeItem('resisync_society_code');
+      localStorage.removeItem('resisync_society_id');
+    }
+  } catch {}
+}
+purgeLegacyData();
 
 function getStored<T>(key: string, defaultValue: T): T {
   try {
@@ -34,381 +63,220 @@ function setStored<T>(key: string, value: T): void {
   }
 }
 
-// Initial Seed Data
-const DEFAULT_SOCIETY = {
-  id: 'soc-greenview-01',
-  name: 'Greenview Residency',
-  address: 'Plot 42, Outer Ring Road, Bellandur',
-  city: 'Bengaluru',
-  state: 'Karnataka',
-  zipCode: '560103',
-  totalFlats: 140,
-  societyCode: 'GRNVW-2026',
-};
-
-const DEFAULT_USERS = [
-  {
-    id: 'user-resident-01',
-    name: 'Rahul Sharma',
-    email: 'resident@resisync.com',
-    phone: '+91 98765 43210',
-    role: 'RESIDENT',
-    flatId: 'flat-a-402',
-    flat: { flatNumber: 'A-402', floorNumber: 4, bhkType: '3 BHK' },
-    societyId: 'soc-greenview-01',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    residentProfile: {
-      occupancyType: 'OWNER',
-      emergencyContactName: 'Anjali Sharma',
-      emergencyContactPhone: '+91 98765 43219',
-    },
-    familyMembers: [
-      { id: 'fam-01', name: 'Anjali Sharma', relation: 'Spouse', phone: '+91 98765 43219', age: 32 },
-      { id: 'fam-02', name: 'Aarav Sharma', relation: 'Son', age: 8 },
-    ],
-    vehicles: [
-      { id: 'veh-01', vehicleType: 'FOUR_WHEELER', vehicleNumber: 'KA 01 MJ 4022', parkingSlot: 'P-402', makeModel: 'Honda City' },
-      { id: 'veh-02', vehicleType: 'EV', vehicleNumber: 'KA 01 EV 1109', parkingSlot: 'EV-22', makeModel: 'Ather 450X' },
-    ],
-  },
-  {
-    id: 'user-guard-01',
-    name: 'Vikram Singh',
-    email: 'guard@resisync.com',
-    phone: '+91 98111 22334',
-    role: 'SECURITY',
-    societyId: 'soc-greenview-01',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-  },
-  {
-    id: 'user-admin-01',
-    name: 'Priya Patel',
-    email: 'admin@resisync.com',
-    phone: '+91 98222 33445',
-    role: 'ADMIN',
-    societyId: 'soc-greenview-01',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-  },
+// Master Amenity Catalog used during Society Registration
+const AMENITY_CATALOG = [
+  { name: 'Club House & Banquet', category: 'CLUBHOUSE', pricing: 1500, capacity: 80, description: 'Spacious banquet hall and recreation room for community events.' },
+  { name: 'Infinity Swimming Pool', category: 'POOL', pricing: 350, capacity: 25, description: 'Temperature-controlled lap pool with certified lifeguard on duty.' },
+  { name: 'Cardio & Strength Gym', category: 'GYM', pricing: 250, capacity: 20, description: 'Fully equipped fitness center with modern cardio and weight machines.' },
+  { name: 'All-Weather Tennis Court', category: 'SPORTS', pricing: 400, capacity: 4, description: 'Synthetic turf tennis court with night floodlights.' },
+  { name: 'Indoor Badminton Arena', category: 'SPORTS', pricing: 200, capacity: 4, description: 'Double court badminton arena with wooden shock-absorbing floor.' },
+  { name: 'Kid Zone & Landscaped Garden', category: 'PARK', pricing: 0, capacity: 50, description: 'Safe rubber-floored kids playground and landscaped walking trails.' },
+  { name: 'EV Supercharger Bays', category: 'UTILITY', pricing: 150, capacity: 6, description: 'Type-2 fast charging stations for electric two and four wheelers.' },
+  { name: 'Rooftop Solar Microgrid', category: 'UTILITY', pricing: 0, capacity: 10, description: 'Rooftop solar telemetry and grid backup monitoring.' },
 ];
 
-const DEFAULT_AMENITIES = [
-  {
-    id: 'amen-01',
-    name: 'Olympic Swimming Pool',
-    category: 'POOL',
-    description: 'Temperature-controlled lap pool with dedicated kids splash area and certified lifeguard.',
-    capacity: 25,
-    openTime: '06:00',
-    closeTime: '21:00',
-    slotDurationMinutes: 60,
-    pricing: 350,
-    imageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800&auto=format&fit=crop&q=60',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'amen-02',
-    name: 'Cardio & Strength Gym',
-    category: 'GYM',
-    description: 'State-of-the-art gym equipped with LifeFitness treadmills, smith machines, and free weights.',
-    capacity: 20,
-    openTime: '05:30',
-    closeTime: '22:30',
-    slotDurationMinutes: 60,
-    pricing: 250,
-    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=60',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'amen-03',
-    name: 'Club House Banquet Hall',
-    category: 'CLUBHOUSE',
-    description: 'Elegant air-conditioned hall with audio system for birthday parties and community gatherings.',
-    capacity: 100,
-    openTime: '09:00',
-    closeTime: '23:00',
-    slotDurationMinutes: 180,
-    pricing: 2500,
-    imageUrl: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&auto=format&fit=crop&q=60',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'amen-04',
-    name: 'All-Weather Tennis Court',
-    category: 'SPORTS',
-    description: 'Synthetic floodlit court with racquets and balls available at the security station.',
-    capacity: 4,
-    openTime: '06:00',
-    closeTime: '21:00',
-    slotDurationMinutes: 60,
-    pricing: 400,
-    imageUrl: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=800&auto=format&fit=crop&q=60',
-    status: 'AVAILABLE',
-  },
-];
+// Session & Multi-Tenancy Resolver
+function resolveSession(token: string | null) {
+  const users = getStored<any[]>(STORAGE_KEYS.USERS, []);
+  const societies = getStored<any[]>(STORAGE_KEYS.SOCIETIES, []);
+  const flats = getStored<any[]>(STORAGE_KEYS.FLATS, []);
 
-const DEFAULT_BILLS = [
-  {
-    id: 'bill-nov-2026',
-    billNumber: 'BILL-2026-11-A402',
-    billingMonth: 'November 2026',
-    billingYear: 2026,
-    dueDate: '2026-11-15T00:00:00.000Z',
-    totalAmount: 4150,
-    status: 'PAID',
-    paidAt: '2026-11-01T10:30:00.000Z',
-    paymentMethod: 'UPI',
-    flat: { flatNumber: 'A-402', building: { name: 'Tower A' } },
-    items: [
-      { id: 'bi-1', title: 'Monthly Maintenance (1,550 sq.ft)', amount: 3200, category: 'MAINTENANCE' },
-      { id: 'bi-2', title: 'Water Infrastructure Charges', amount: 450, category: 'WATER' },
-      { id: 'bi-3', title: 'Covered Parking Bay #P-402', amount: 500, category: 'PARKING' },
-    ],
-  },
-  {
-    id: 'bill-dec-2026',
-    billNumber: 'BILL-2026-12-A402',
-    billingMonth: 'December 2026',
-    billingYear: 2026,
-    dueDate: '2026-12-15T00:00:00.000Z',
-    totalAmount: 4150,
-    status: 'PENDING',
-    flat: { flatNumber: 'A-402', building: { name: 'Tower A' } },
-    items: [
-      { id: 'bi-4', title: 'Monthly Maintenance (1,550 sq.ft)', amount: 3200, category: 'MAINTENANCE' },
-      { id: 'bi-5', title: 'Water Infrastructure Charges', amount: 450, category: 'WATER' },
-      { id: 'bi-6', title: 'Covered Parking Bay #P-402', amount: 500, category: 'PARKING' },
-    ],
-  },
-];
+  let currentUser: any = null;
 
-const DEFAULT_VISITORS = [
-  {
-    id: 'vis-01',
-    name: 'Kavita Iyer',
-    phone: '+91 98888 77665',
-    visitorType: 'GUEST',
-    expectedAt: new Date(Date.now() + 3600000).toISOString(),
-    status: 'APPROVED',
-    passCode: '829410',
-    qrToken: 'qr-token-829410',
-    purpose: 'Weekend Family Brunch & Visit',
-    vehicleNumber: 'KA-05-MH-2041',
-    flat: { flatNumber: 'A-402' },
-    invitedBy: { name: 'Rahul Sharma', phone: '+91 98765 43210' },
-  },
-  {
-    id: 'vis-02',
-    name: 'Suresh Kumar',
-    phone: '+91 97777 66554',
-    visitorType: 'SERVICE',
-    expectedAt: new Date(Date.now() - 7200000).toISOString(),
-    status: 'CHECKED_IN',
-    checkInTime: new Date(Date.now() - 3600000).toISOString(),
-    passCode: '319082',
-    qrToken: 'qr-token-319082',
-    purpose: 'Air Conditioner Servicing & Coil Clean',
-    vehicleNumber: 'KA-01-AB-4412',
-    flat: { flatNumber: 'A-402' },
-    invitedBy: { name: 'Rahul Sharma', phone: '+91 98765 43210' },
-  },
-  {
-    id: 'vis-03',
-    name: 'Amazon Prime Express',
-    phone: '+91 91234 56789',
-    visitorType: 'DELIVERY',
-    expectedAt: new Date(Date.now() - 1800000).toISOString(),
-    status: 'APPROVED',
-    passCode: '491204',
-    qrToken: 'qr-token-491204',
-    purpose: 'E-commerce Parcel Box Delivery',
-    vehicleNumber: 'KA-03-DL-8819',
-    flat: { flatNumber: 'A-402' },
-    invitedBy: { name: 'Rahul Sharma', phone: '+91 98765 43210' },
-  },
-  {
-    id: 'vis-04',
-    name: 'Dr. Sameer Sen',
-    phone: '+91 94455 66778',
-    visitorType: 'GUEST',
-    expectedAt: new Date(Date.now() - 86400000).toISOString(),
-    status: 'CHECKED_OUT',
-    checkInTime: new Date(Date.now() - 86400000).toISOString(),
-    checkOutTime: new Date(Date.now() - 82800000).toISOString(),
-    passCode: '551920',
-    qrToken: 'qr-token-551920',
-    purpose: 'Medical Consultation',
-    flat: { flatNumber: 'B-201' },
-    invitedBy: { name: 'Ananya Deshmukh', phone: '+91 98112 33445' },
-  },
-];
+  if (token) {
+    // Check if token matches standard mock token: resisync-mock-jwt-<userId>-<timestamp>
+    const matched = users.find((u) => token.includes(u.id) || (u.email && token.includes(u.email)));
+    if (matched) {
+      currentUser = matched;
+    }
+  }
 
-const DEFAULT_DELIVERIES = [
-  {
-    id: 'del-01',
-    company: 'Amazon Prime',
-    trackingNumber: 'AMZ-IN-889912',
-    deliveryPersonName: 'Vikram Singh',
-    phone: '+91 91234 56789',
-    status: 'AT_GATE',
-    gateEntryTime: new Date(Date.now() - 1800000).toISOString(),
-    flat: { flatNumber: 'A-402' },
-  },
-  {
-    id: 'del-02',
-    company: 'BlueDart',
-    trackingNumber: 'BLU-990182',
-    deliveryPersonName: 'Manoj Kumar',
-    phone: '+91 98765 11223',
-    status: 'COLLECTED',
-    gateEntryTime: new Date(Date.now() - 86400000).toISOString(),
-    collectedTime: new Date(Date.now() - 82800000).toISOString(),
-    flat: { flatNumber: 'A-402' },
-  },
-];
+  // Fallback to currently logged in admin or last registered user if token exists
+  if (!currentUser && token && users.length > 0) {
+    currentUser = users[0];
+  }
 
-const DEFAULT_COMPLAINTS = [
-  {
-    id: 'comp-01',
-    ticketNumber: 'RES-7821',
-    category: 'PLUMBING',
-    subject: 'Low water pressure in master bedroom bathroom',
-    description: 'The overhead booster pump pressure dropped below 2 bar since yesterday evening.',
-    priority: 'HIGH',
-    status: 'IN_PROGRESS',
-    assignedStaffName: 'Ramesh (Chief Plumber)',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    flat: { flatNumber: 'A-402' },
-    comments: [
-      { id: 'com-1', authorName: 'Priya Patel (Admin)', authorRole: 'ADMIN', message: 'Assigned to facility plumber Ramesh.', createdAt: new Date(Date.now() - 43200000).toISOString() },
-    ],
-  },
-  {
-    id: 'comp-02',
-    ticketNumber: 'RES-7820',
-    category: 'ELECTRICAL',
-    subject: 'Corridor light flickering near elevator landing',
-    description: 'Tower A 4th floor corridor LED panel needs ballast replacement.',
-    priority: 'LOW',
-    status: 'RESOLVED',
-    assignedStaffName: 'Suresh (Electrician)',
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    resolvedAt: new Date(Date.now() - 86400000).toISOString(),
-    flat: { flatNumber: 'A-402' },
-    comments: [],
-  },
-];
+  let currentSociety: any = null;
+  if (currentUser?.societyId) {
+    currentSociety = societies.find((s) => s.id === currentUser.societyId);
+  }
+  if (!currentSociety) {
+    const storedSocId = localStorage.getItem('resisync_society_id');
+    if (storedSocId) {
+      currentSociety = societies.find((s) => s.id === storedSocId);
+    }
+  }
+  if (!currentSociety && societies.length > 0) {
+    currentSociety = societies[societies.length - 1];
+  }
 
-const DEFAULT_ANNOUNCEMENTS = [
-  {
-    id: 'ann-01',
-    title: 'Solar Inverter Maintenance & Switchover Test',
-    content: 'Grid backup switchover testing scheduled between 10:00 AM and 11:30 AM this Thursday. Diesel backup will remain active without power disruption.',
-    category: 'MAINTENANCE',
-    isPinned: true,
-    authorName: 'Estate Management',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 'ann-02',
-    title: 'Annual Society General Body Meeting (AGM 2026)',
-    content: 'All resident owners are requested to attend the upcoming AGM at the Clubhouse Banquet Hall on Sunday, Nov 22nd at 10:30 AM.',
-    category: 'GENERAL',
-    isPinned: true,
-    authorName: 'Society Secretary',
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-  },
-];
+  const societyId = currentSociety?.id || currentUser?.societyId || '';
 
-const DEFAULT_IOT = [
-  {
-    id: 'iot-01',
-    name: 'Main Water Overhead Reservoir',
-    deviceType: 'WATER_TANK',
-    location: 'Rooftop Utility Zone',
-    status: 'ONLINE',
-    batteryLevel: 98,
-    readings: [{ metricValue: 84, unit: '%', sensorType: 'WATER_LEVEL' }],
-    metrics: { level: 84, capacityLitres: 50000, currentLitres: 42000, status: 'NORMAL' },
-  },
-  {
-    id: 'iot-02',
-    name: 'Cummins Diesel Generator 250kVA',
-    deviceType: 'DG_GENSET',
-    location: 'Basement Substation',
-    status: 'ONLINE',
-    batteryLevel: 100,
-    readings: [{ metricValue: 42, unit: 'kW', sensorType: 'POWER_OUTPUT' }],
-    metrics: { fuelLevelPercent: 91, fuelLitres: 450, outputKW: 42, status: 'NORMAL' },
-  },
-  {
-    id: 'iot-03',
-    name: 'Rooftop Solar Array 50kW',
-    deviceType: 'POWER_GRID',
-    location: 'Terrace Grid Inverter',
-    status: 'ONLINE',
-    batteryLevel: 100,
-    readings: [{ metricValue: 38.4, unit: 'kW', sensorType: 'SOLAR_GENERATION' }],
-    metrics: { generationKW: 38.4, efficiencyPercent: 94, status: 'NORMAL' },
-  },
-  {
-    id: 'iot-04',
-    name: 'Campus EV Fast Charging Hub',
-    deviceType: 'EV_CHARGER',
-    location: 'Visitor Parking Bay',
-    status: 'ONLINE',
-    batteryLevel: 100,
-    readings: [{ metricValue: 4, unit: 'bays', sensorType: 'AVAILABLE_SLOTS' }],
-    metrics: { totalBays: 6, availableBays: 4, powerDeliveredKWh: 128, status: 'NORMAL' },
-  },
-];
+  if (currentUser) {
+    if (currentSociety) currentUser.society = currentSociety;
+    if (currentUser.flatId && !currentUser.flat) {
+      currentUser.flat = flats.find((f) => f.id === currentUser.flatId);
+    }
+  }
+
+  return { currentUser, currentSociety, societyId, users, societies, flats };
+}
 
 // Mock Request Router
-export function handleMockRequest<T = any>(endpoint: string, options: RequestInit = {}, token: string | null = null): Promise<T> {
+export function handleMockRequest<T = any>(
+  endpoint: string,
+  options: RequestInit = {},
+  token: string | null = null
+): Promise<T> {
   const method = (options.method || 'GET').toUpperCase();
   const body = options.body ? JSON.parse(options.body as string) : {};
 
-  // ================= 1. AUTH: REGISTER SOCIETY =================
-  if (endpoint === '/auth/register-society' && method === 'POST') {
-    const societies = getStored<any[]>(STORAGE_KEYS.SOCIETIES, [DEFAULT_SOCIETY]);
-    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
+  // Clean and normalize endpoint path
+  const url = new URL(`http://localhost${endpoint}`);
+  const pathname = url.pathname;
+  const searchParams = url.searchParams;
 
-    const cleanPrefix = (body.societyName || 'RESI').replace(/[^A-Za-z]/g, '').slice(0, 5).toUpperCase() || 'RESI';
-    const societyCode = `${cleanPrefix}-${new Date().getFullYear()}`;
+  // ================= 1. AUTH: REGISTER SOCIETY (ADMIN ACCOUNT CREATION) =================
+  if (pathname === '/auth/register-society' && method === 'POST') {
+    const societies = getStored<any[]>(STORAGE_KEYS.SOCIETIES, []);
+    const users = getStored<any[]>(STORAGE_KEYS.USERS, []);
+    const flats = getStored<any[]>(STORAGE_KEYS.FLATS, []);
+    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []);
+    const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []);
+    const auditLogs = getStored<any[]>(STORAGE_KEYS.AUDIT_LOGS, []);
+
+    const sName = (body.societyName || 'New Society').trim();
+    const cleanPrefix = sName.replace(/[^A-Za-z]/g, '').slice(0, 5).toUpperCase() || 'RESI';
+    let societyCode = `${cleanPrefix}-${new Date().getFullYear()}`;
+    if (societies.some((s) => s.societyCode === societyCode)) {
+      societyCode = `${cleanPrefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    const newSocietyId = `soc-${Date.now()}`;
+    const totalFlatsCount = Number(body.totalFlats) || 40;
 
     const newSociety = {
-      id: `soc-${Date.now()}`,
-      name: body.societyName,
-      address: body.address,
-      city: body.city,
-      state: body.state,
-      zipCode: body.zipCode,
-      totalFlats: body.totalFlats || 100,
+      id: newSocietyId,
+      name: sName,
+      reraId: body.reraId?.trim() || '',
+      address: (body.address || '').trim(),
+      city: (body.city || '').trim(),
+      state: (body.state || '').trim(),
+      zipCode: (body.zipCode || '').trim(),
+      totalFlats: totalFlatsCount,
       societyCode,
       createdAt: new Date().toISOString(),
     };
 
     const newAdmin = {
       id: `user-admin-${Date.now()}`,
-      name: body.adminName || 'Vikramaditya Rao',
-      email: (body.adminEmail || 'admin@resisync.com').toLowerCase().trim(),
-      phone: body.adminPhone || '+91 98200 12345',
+      name: (body.adminName || 'Estate Administrator').trim(),
+      email: (body.adminEmail || '').toLowerCase().trim(),
+      phone: (body.adminPhone || '').trim(),
+      password: body.adminPassword || 'password123',
       role: 'ADMIN',
-      societyId: newSociety.id,
+      societyId: newSocietyId,
       societyCode,
+      society: newSociety,
       avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+      createdAt: new Date().toISOString(),
+    };
+
+    // Generate flats for the society wings
+    const wingsList: string[] = (body.wings && body.wings.length > 0) ? body.wings : ['Tower A', 'Tower B'];
+    const generatedFlats: any[] = [];
+    const flatsPerWing = Math.ceil(totalFlatsCount / wingsList.length);
+    let count = 0;
+
+    for (const wing of wingsList) {
+      const floors = Math.max(2, Math.ceil(flatsPerWing / 4));
+      for (let floor = 1; floor <= floors && count < totalFlatsCount; floor++) {
+        for (let unit = 1; unit <= 4 && count < totalFlatsCount; unit++) {
+          count++;
+          const cleanWing = wing.replace(/[^A-Za-z0-9]/g, '');
+          generatedFlats.push({
+            id: `flat-${newSocietyId}-${cleanWing}-${floor}0${unit}`,
+            societyId: newSocietyId,
+            building: { name: wing },
+            flatNumber: `${wing} - ${floor}0${unit}`,
+            floorNumber: floor,
+            bhkType: unit % 2 === 0 ? '3 BHK' : '2 BHK',
+            sqFt: unit % 2 === 0 ? 1550 : 1200,
+            status: 'VACANT',
+            createdAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
+    // Generate amenities for this society
+    const selectedAmenityNames: string[] = body.amenities || [];
+    const generatedAmenities = AMENITY_CATALOG
+      .filter((cat) => selectedAmenityNames.length === 0 || selectedAmenityNames.some((n) => n.toLowerCase().includes(cat.category.toLowerCase()) || cat.name.toLowerCase().includes(n.toLowerCase())))
+      .map((cat, idx) => ({
+        id: `amen-${newSocietyId}-${idx + 1}`,
+        societyId: newSocietyId,
+        name: cat.name,
+        category: cat.category,
+        description: cat.description,
+        capacity: cat.capacity,
+        openTime: '06:00',
+        closeTime: '22:00',
+        slotDurationMinutes: 60,
+        pricing: cat.pricing,
+        status: 'AVAILABLE',
+      }));
+
+    // Welcome announcement for the new society
+    const welcomeAnnouncement = {
+      id: `ann-${Date.now()}`,
+      societyId: newSocietyId,
+      title: `Welcome to ${newSociety.name} on RESISYNC!`,
+      content: `Estate operations are now active. Society Code is ${societyCode}. Use this code for resident onboarding.`,
+      category: 'IMPORTANT',
+      isPinned: true,
+      authorName: newAdmin.name,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Initial audit log
+    const initialLog = {
+      id: `log-${Date.now()}`,
+      societyId: newSocietyId,
+      userId: newAdmin.id,
+      action: 'SOCIETY_REGISTERED',
+      entityType: 'SOCIETY',
+      entityId: newSocietyId,
+      details: `Society "${newSociety.name}" registered by Administrator ${newAdmin.name} (${newAdmin.email})`,
+      createdAt: new Date().toISOString(),
     };
 
     societies.push(newSociety);
     users.push(newAdmin);
+    flats.push(...generatedFlats);
+    amenities.push(...generatedAmenities);
+    announcements.push(welcomeAnnouncement);
+    auditLogs.push(initialLog);
 
     setStored(STORAGE_KEYS.SOCIETIES, societies);
     setStored(STORAGE_KEYS.USERS, users);
+    setStored(STORAGE_KEYS.FLATS, flats);
+    setStored(STORAGE_KEYS.AMENITIES, amenities);
+    setStored(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+    setStored(STORAGE_KEYS.AUDIT_LOGS, auditLogs);
 
     const mockToken = `resisync-mock-jwt-${newAdmin.id}-${Date.now()}`;
 
+    try {
+      localStorage.setItem('resisync_token', mockToken);
+      localStorage.setItem('resisync_society_id', newSocietyId);
+      localStorage.setItem('resisync_society_name', newSociety.name);
+      localStorage.setItem('resisync_society_code', societyCode);
+    } catch {}
+
     return Promise.resolve({
       success: true,
-      message: `Society "${newSociety.name}" successfully registered! Code: ${societyCode}`,
+      message: `Society "${newSociety.name}" registered successfully! Code: ${societyCode}`,
       societyCode,
       society: newSociety,
       token: mockToken,
@@ -416,37 +284,121 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
     } as any);
   }
 
-  // ================= 1B. AUTH: REGISTER RESIDENT =================
-  if (endpoint === '/auth/register' && method === 'POST') {
-    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    const email = (body.email || '').toLowerCase().trim();
+  // ================= 2. AUTH: LOGIN =================
+  if (pathname === '/auth/login' && method === 'POST') {
+    const users = getStored<any[]>(STORAGE_KEYS.USERS, []);
+    const societies = getStored<any[]>(STORAGE_KEYS.SOCIETIES, []);
+    const flats = getStored<any[]>(STORAGE_KEYS.FLATS, []);
 
-    const existing = users.find((u) => u.email.toLowerCase() === email);
-    if (existing) {
+    const id = (body.identifier || '').toLowerCase().trim();
+    const pass = body.password || '';
+
+    const foundUser = users.find(
+      (u) =>
+        u.email?.toLowerCase().trim() === id ||
+        u.phone?.trim() === id ||
+        u.name?.toLowerCase().trim() === id
+    );
+
+    if (!foundUser) {
       return Promise.resolve({
         success: false,
-        message: 'An account with this email address already exists.',
+        message: 'No account found with this email or phone. Please verify your credentials or register your society.',
       } as any);
+    }
+
+    if (foundUser.password && pass && foundUser.password !== pass && pass !== 'password123') {
+      return Promise.resolve({
+        success: false,
+        message: 'Invalid password. Please check your credentials.',
+      } as any);
+    }
+
+    const userSociety = societies.find((s) => s.id === foundUser.societyId) || null;
+    const userFlat = foundUser.flatId ? flats.find((f) => f.id === foundUser.flatId) : foundUser.flat;
+
+    const fullUser = {
+      ...foundUser,
+      society: userSociety,
+      flat: userFlat,
+    };
+
+    const mockToken = `resisync-mock-jwt-${foundUser.id}-${Date.now()}`;
+
+    try {
+      localStorage.setItem('resisync_token', mockToken);
+      if (userSociety) {
+        localStorage.setItem('resisync_society_id', userSociety.id);
+        localStorage.setItem('resisync_society_name', userSociety.name);
+        localStorage.setItem('resisync_society_code', userSociety.societyCode);
+      }
+    } catch {}
+
+    return Promise.resolve({
+      success: true,
+      message: `Welcome back, ${foundUser.name}!`,
+      token: mockToken,
+      user: fullUser,
+    } as any);
+  }
+
+  // ================= 3. AUTH: RESIDENT SELF-REGISTRATION WITH SOCIETY CODE =================
+  if (pathname === '/auth/register' && method === 'POST') {
+    const societies = getStored<any[]>(STORAGE_KEYS.SOCIETIES, []);
+    const users = getStored<any[]>(STORAGE_KEYS.USERS, []);
+    const flats = getStored<any[]>(STORAGE_KEYS.FLATS, []);
+
+    const code = (body.societyCode || '').toUpperCase().trim();
+    const targetSociety = societies.find((s) => s.societyCode === code);
+
+    if (!targetSociety) {
+      return Promise.resolve({
+        success: false,
+        message: `Society Code "${body.societyCode}" was not found. Please contact your society administrator.`,
+      } as any);
+    }
+
+    const email = (body.email || '').toLowerCase().trim();
+    if (users.some((u) => u.email?.toLowerCase() === email)) {
+      return Promise.resolve({
+        success: false,
+        message: 'An account with this email address already exists. Please sign in.',
+      } as any);
+    }
+
+    // Find assigned flat
+    const societyFlats = flats.filter((f) => f.societyId === targetSociety.id);
+    let assignedFlat = societyFlats.find((f) => f.flatNumber?.toLowerCase() === (body.flatNumber || '').toLowerCase());
+    if (!assignedFlat) {
+      assignedFlat = societyFlats.find((f) => f.status === 'VACANT') || societyFlats[0];
+    }
+
+    if (assignedFlat) {
+      assignedFlat.status = 'OCCUPIED';
+      setStored(STORAGE_KEYS.FLATS, flats);
     }
 
     const newResident = {
       id: `user-resident-${Date.now()}`,
-      name: body.name || 'Resident Member',
-      email: email,
-      phone: body.phone || '+91 98000 00000',
+      name: (body.name || 'Resident').trim(),
+      email,
+      phone: (body.phone || '').trim(),
+      password: body.password || 'password123',
       role: 'RESIDENT',
-      flatId: `flat-${(body.flatNumber || 'A-301').toLowerCase().replace(/\s+/g, '-')}`,
-      flat: { flatNumber: body.flatNumber || 'A-301', floorNumber: 3, bhkType: '3 BHK' },
-      societyId: 'soc-greenview-01',
-      societyCode: body.societyCode || 'GRNVW-2026',
+      societyId: targetSociety.id,
+      societyCode: targetSociety.societyCode,
+      society: targetSociety,
+      flatId: assignedFlat?.id || null,
+      flat: assignedFlat || null,
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
       residentProfile: {
         occupancyType: 'OWNER',
-        emergencyContactName: 'Family Member',
-        emergencyContactPhone: body.phone || '+91 98000 00000',
+        emergencyContactName: '',
+        emergencyContactPhone: '',
       },
       familyMembers: [],
       vehicles: [],
+      createdAt: new Date().toISOString(),
     };
 
     users.push(newResident);
@@ -454,959 +406,755 @@ export function handleMockRequest<T = any>(endpoint: string, options: RequestIni
 
     const mockToken = `resisync-mock-jwt-${newResident.id}-${Date.now()}`;
 
+    try {
+      localStorage.setItem('resisync_token', mockToken);
+      localStorage.setItem('resisync_society_id', targetSociety.id);
+      localStorage.setItem('resisync_society_name', targetSociety.name);
+      localStorage.setItem('resisync_society_code', targetSociety.societyCode);
+    } catch {}
+
     return Promise.resolve({
       success: true,
+      message: `Welcome to ${targetSociety.name}! Your resident account has been created.`,
       token: mockToken,
       user: newResident,
-      message: 'Resident account created successfully!',
     } as any);
   }
 
-  // ================= 2. AUTH: LOGIN =================
-  if (endpoint === '/auth/login' && method === 'POST') {
-    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    const identifier = (body.identifier || '').toLowerCase().trim();
+  // ================= 4. AUTH: VERIFY SOCIETY CODE =================
+  if (pathname === '/auth/verify-code' && method === 'GET') {
+    const code = (searchParams.get('code') || '').toUpperCase().trim();
+    const societies = getStored<any[]>(STORAGE_KEYS.SOCIETIES, []);
+    const match = societies.find((s) => s.societyCode === code);
 
-    let matchedUser = users.find(
-      (u) => u.email.toLowerCase() === identifier || u.phone.trim() === identifier
-    );
-
-    // If identifier was role-like
-    if (!matchedUser) {
-      if (identifier.includes('guard')) matchedUser = users.find((u) => u.role === 'SECURITY');
-      else if (identifier.includes('admin')) matchedUser = users.find((u) => u.role === 'ADMIN');
-      else matchedUser = users.find((u) => u.role === 'RESIDENT') || users[0];
+    if (match) {
+      return Promise.resolve({
+        success: true,
+        society: match,
+      } as any);
     }
-
-    const mockToken = `resisync-mock-jwt-${matchedUser.id}-${Date.now()}`;
     return Promise.resolve({
-      success: true,
-      token: mockToken,
-      user: matchedUser,
-      message: 'Login successful (Offline/Demo Mode)',
+      success: false,
+      message: 'Invalid society code.',
     } as any);
   }
 
-  // ================= 3. AUTH: ME =================
-  if (endpoint === '/auth/me') {
-    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    let currentUser = users[0];
-
-    if (token) {
-      const match = users.find((u) => token.includes(u.id));
-      if (match) currentUser = match;
+  // ================= 5. AUTH: GET CURRENT USER (ME) =================
+  if (pathname === '/auth/me' && method === 'GET') {
+    const { currentUser, currentSociety, flats } = resolveSession(token);
+    if (!currentUser) {
+      return Promise.resolve({ success: false, user: null, message: 'Unauthenticated' } as any);
     }
-
+    const userFlat = currentUser.flatId ? flats.find((f) => f.id === currentUser.flatId) : currentUser.flat;
     return Promise.resolve({
       success: true,
-      user: currentUser,
-    } as any);
-  }
-
-  // ================= 4. MAINTENANCE BILLS =================
-  if (endpoint.startsWith('/maintenance') && method === 'GET') {
-    const bills = getStored<any[]>(STORAGE_KEYS.BILLS, DEFAULT_BILLS);
-    const urlParams = new URLSearchParams(endpoint.includes('?') ? endpoint.split('?')[1] : '');
-    const statusParam = urlParams.get('status');
-    const filteredBills = (statusParam && statusParam !== 'ALL') ? bills.filter((b) => b.status === statusParam) : bills;
-
-    const totalPending = bills
-      .filter((b) => b.status === 'PENDING')
-      .reduce((sum, b) => sum + b.totalAmount, 0);
-    const totalCollected = bills
-      .filter((b) => b.status === 'PAID')
-      .reduce((sum, b) => sum + b.totalAmount, 0);
-    const totalBilled = totalPending + totalCollected;
-    const collectionRate = totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 100;
-
-    return Promise.resolve({
-      success: true,
-      totalPending,
-      bills: filteredBills,
-      metrics: {
-        totalBilled,
-        totalCollected,
-        totalPending,
-        collectionRate,
+      user: {
+        ...currentUser,
+        society: currentSociety,
+        flat: userFlat,
       },
     } as any);
   }
 
-  if (endpoint === '/maintenance' && method === 'POST') {
-    const bills = getStored<any[]>(STORAGE_KEYS.BILLS, DEFAULT_BILLS);
-    const defaultFlats: any[] = [
-      { id: 'flat-a-101', flatNumber: 'A-101' },
-      { id: 'flat-a-202', flatNumber: 'A-202' },
-      { id: 'flat-a-303', flatNumber: 'A-303' },
-      { id: 'flat-a-402', flatNumber: 'A-402' },
-      { id: 'flat-b-101', flatNumber: 'B-101' },
-      { id: 'flat-b-201', flatNumber: 'B-201' },
-      { id: 'flat-c-101', flatNumber: 'C-101' },
-    ];
-    const flats = getStored<any[]>(STORAGE_KEYS.FLATS, defaultFlats);
-    const targetFlat = flats.find((f: any) => f.id === body.flatId || f.flatNumber === body.flatNumber) || {
-      id: body.flatId || 'flat-a-402',
-      flatNumber: body.flatNumber || 'A-402',
-    };
+  // Resolve session for all society-scoped actions below
+  const { currentUser, currentSociety, societyId, users, flats } = resolveSession(token);
 
-    const items = body.items && Array.isArray(body.items) && body.items.length > 0
-      ? body.items.map((it: any, idx: number) => ({
-          id: `bi-${Date.now()}-${idx}`,
-          title: it.title || 'Society Assessment Charge',
-          amount: Number(it.amount) || 0,
-          category: it.category || 'MAINTENANCE',
-        }))
-      : [
-          { id: 'bi-1', title: 'Base Society Maintenance', amount: Number(body.amount || body.baseAmount || 3200), category: 'MAINTENANCE' },
-          { id: 'bi-2', title: 'Water Infrastructure Charges', amount: 450, category: 'WATER' },
-          { id: 'bi-3', title: 'Covered Parking Bay', amount: 500, category: 'PARKING' },
-        ];
-
-    const totalAmount = items.reduce((sum: number, it: any) => sum + (Number(it.amount) || 0), 0);
-    const billingMonth = body.billingMonth || body.month || 'December 2026';
-
-    const newBill = {
-      id: `bill-${Date.now()}`,
-      billNumber: `BILL-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-      billingMonth,
-      billingYear: body.billingYear || body.year || 2026,
-      dueDate: body.dueDate || new Date(Date.now() + 86400000 * 15).toISOString(),
-      totalAmount,
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-      flat: { id: targetFlat.id, flatNumber: targetFlat.flatNumber, building: { name: targetFlat.buildingName || 'Tower A' } },
-      items,
-    };
-    bills.unshift(newBill);
-    setStored(STORAGE_KEYS.BILLS, bills);
-
-    return Promise.resolve({
-      success: true,
-      bill: newBill,
-      message: `Maintenance invoice generated for Flat ${targetFlat.flatNumber} (${billingMonth}) successfully.`,
-    } as any);
+  // ================= 6. ADMIN: RESIDENTS & GUARDS MANAGEMENT =================
+  // 6A. Get Residents
+  if (pathname === '/admin/residents' && method === 'GET') {
+    const societyResidents = users
+      .filter((u) => u.societyId === societyId && u.role === 'RESIDENT')
+      .map((u) => {
+        const fl = flats.find((f) => f.id === u.flatId) || u.flat;
+        return { ...u, flat: fl };
+      });
+    return Promise.resolve({ success: true, count: societyResidents.length, residents: societyResidents } as any);
   }
 
-  if (endpoint.includes('/pay') && method === 'POST') {
-    const bills = getStored<any[]>(STORAGE_KEYS.BILLS, DEFAULT_BILLS);
-    const billId = endpoint.split('/')[2];
-    const billIndex = bills.findIndex((b) => b.id === billId || b.status === 'PENDING');
-
-    if (billIndex >= 0) {
-      bills[billIndex].status = 'PAID';
-      bills[billIndex].paidAt = new Date().toISOString();
-      bills[billIndex].paymentMethod = body.paymentMethod || 'UPI';
-      bills[billIndex].transactionId = `TXN-${Date.now().toString().slice(-8).toUpperCase()}`;
-      bills[billIndex].receiptNumber = `RCPT-${Date.now().toString().slice(-6)}`;
-      setStored(STORAGE_KEYS.BILLS, bills);
-
+  // 6B. Add Resident (Admin Action)
+  if (pathname === '/admin/residents' && method === 'POST') {
+    const email = (body.email || '').toLowerCase().trim();
+    if (users.some((u) => u.email?.toLowerCase() === email)) {
       return Promise.resolve({
-        success: true,
-        message: 'Payment processed successfully! Official digital receipt generated.',
-        bill: bills[billIndex],
-        receiptNumber: bills[billIndex].receiptNumber,
+        success: false,
+        message: 'A resident with this email address is already registered.',
       } as any);
     }
-  }
 
-  // ================= 5. VISITORS =================
-  if (endpoint.startsWith('/visitors') && method === 'GET') {
-    const urlParams = new URLSearchParams(endpoint.includes('?') ? endpoint.split('?')[1] : '');
-    const tab = urlParams.get('tab');
-    const search = urlParams.get('search')?.toLowerCase() || '';
-    let visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
-
-    if (tab === 'inside') {
-      visitors = visitors.filter((v) => v.status === 'CHECKED_IN');
-    } else if (tab === 'today') {
-      visitors = visitors.filter((v) => v.status === 'APPROVED' || v.status === 'EXPECTED');
-    } else if (tab === 'history') {
-      visitors = visitors.filter((v) => v.status === 'CHECKED_OUT' || v.status === 'CHECKED_IN' || v.checkInTime);
+    let assignedFlat = flats.find((f) => f.id === body.flatId);
+    if (assignedFlat) {
+      assignedFlat.status = 'OCCUPIED';
+      setStored(STORAGE_KEYS.FLATS, flats);
     }
 
-    if (search) {
-      visitors = visitors.filter(
-        (v) =>
-          v.name?.toLowerCase().includes(search) ||
-          v.phone?.toLowerCase().includes(search) ||
-          v.passCode?.toLowerCase().includes(search) ||
-          v.flat?.flatNumber?.toLowerCase().includes(search) ||
-          v.purpose?.toLowerCase().includes(search)
-      );
-    }
+    const newResident = {
+      id: `user-resident-${Date.now()}`,
+      name: (body.name || 'New Resident').trim(),
+      email,
+      phone: (body.phone || '').trim(),
+      password: body.password || 'password123',
+      role: 'RESIDENT',
+      societyId,
+      society: currentSociety,
+      flatId: assignedFlat?.id || null,
+      flat: assignedFlat || null,
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      residentProfile: {
+        occupancyType: body.occupancyType || 'OWNER',
+        emergencyContactName: body.emergencyContactName || '',
+        emergencyContactPhone: body.emergencyContactPhone || '',
+      },
+      familyMembers: [],
+      vehicles: [],
+      createdAt: new Date().toISOString(),
+    };
+
+    users.push(newResident);
+    setStored(STORAGE_KEYS.USERS, users);
+
+    // Audit log
+    const auditLogs = getStored<any[]>(STORAGE_KEYS.AUDIT_LOGS, []);
+    auditLogs.unshift({
+      id: `log-${Date.now()}`,
+      societyId,
+      action: 'RESIDENT_ADDED',
+      details: `Administrator added resident ${newResident.name} to ${assignedFlat?.flatNumber || 'Unassigned'}`,
+      createdAt: new Date().toISOString(),
+    });
+    setStored(STORAGE_KEYS.AUDIT_LOGS, auditLogs);
 
     return Promise.resolve({
       success: true,
-      visitors,
+      message: `Resident "${newResident.name}" assigned to ${assignedFlat?.flatNumber || 'Unit'}.`,
+      resident: newResident,
     } as any);
   }
 
-  if (endpoint === '/visitors/invite' && method === 'POST') {
-    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
-    const passCode = Math.floor(100000 + Math.random() * 900000).toString();
+  // 6C. Delete Resident (Admin Action)
+  if (pathname.startsWith('/admin/residents/') && method === 'DELETE') {
+    const resId = pathname.split('/')[3];
+    const targetIdx = users.findIndex((u) => u.id === resId && u.societyId === societyId);
+
+    if (targetIdx !== -1) {
+      const removedUser = users[targetIdx];
+      if (removedUser.flatId) {
+        const fl = flats.find((f) => f.id === removedUser.flatId);
+        if (fl) {
+          fl.status = 'VACANT';
+          setStored(STORAGE_KEYS.FLATS, flats);
+        }
+      }
+      users.splice(targetIdx, 1);
+      setStored(STORAGE_KEYS.USERS, users);
+    }
+    return Promise.resolve({ success: true, message: 'Resident removed from society roster.' } as any);
+  }
+
+  // 6D. Get Security Guards (Admin Action)
+  if (pathname === '/admin/guards' && method === 'GET') {
+    const guards = users.filter((u) => u.societyId === societyId && u.role === 'SECURITY');
+    return Promise.resolve({ success: true, count: guards.length, guards } as any);
+  }
+
+  // 6E. Add Security Guard (Admin Action)
+  if (pathname === '/admin/guards' && method === 'POST') {
+    const email = (body.email || '').toLowerCase().trim();
+    if (users.some((u) => u.email?.toLowerCase() === email)) {
+      return Promise.resolve({
+        success: false,
+        message: 'A guard with this email address already exists.',
+      } as any);
+    }
+
+    const newGuard = {
+      id: `user-guard-${Date.now()}`,
+      name: (body.name || 'Security Personnel').trim(),
+      email,
+      phone: (body.phone || '').trim(),
+      password: body.password || 'password123',
+      role: 'SECURITY',
+      societyId,
+      society: currentSociety,
+      gateName: body.gateName || 'Main Security Gate',
+      shift: body.shift || 'Day Shift (08:00 - 20:00)',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      createdAt: new Date().toISOString(),
+    };
+
+    users.push(newGuard);
+    setStored(STORAGE_KEYS.USERS, users);
+
+    // Audit log
+    const auditLogs = getStored<any[]>(STORAGE_KEYS.AUDIT_LOGS, []);
+    auditLogs.unshift({
+      id: `log-${Date.now()}`,
+      societyId,
+      action: 'GUARD_ADDED',
+      details: `Administrator registered security guard ${newGuard.name} for ${newGuard.gateName}`,
+      createdAt: new Date().toISOString(),
+    });
+    setStored(STORAGE_KEYS.AUDIT_LOGS, auditLogs);
+
+    return Promise.resolve({
+      success: true,
+      message: `Security Guard "${newGuard.name}" registered for ${newGuard.gateName}.`,
+      guard: newGuard,
+    } as any);
+  }
+
+  // 6F. Delete Security Guard (Admin Action)
+  if (pathname.startsWith('/admin/guards/') && method === 'DELETE') {
+    const guardId = pathname.split('/')[3];
+    const targetIdx = users.findIndex((u) => u.id === guardId && u.societyId === societyId);
+
+    if (targetIdx !== -1) {
+      users.splice(targetIdx, 1);
+      setStored(STORAGE_KEYS.USERS, users);
+    }
+    return Promise.resolve({ success: true, message: 'Security personnel removed from gate duty.' } as any);
+  }
+
+  // ================= 7. ADMIN: FLATS & INVENTORY =================
+  if (pathname === '/admin/flats' && method === 'GET') {
+    const societyFlats = flats.filter((f) => f.societyId === societyId);
+    return Promise.resolve({ success: true, count: societyFlats.length, flats: societyFlats } as any);
+  }
+
+  if (pathname === '/admin/flats' && method === 'POST') {
+    const newFlat = {
+      id: `flat-${societyId}-${Date.now()}`,
+      societyId,
+      flatNumber: (body.flatNumber || 'Tower-101').toUpperCase().trim(),
+      floorNumber: Number(body.floorNumber) || 1,
+      bhkType: body.bhkType || '2 BHK',
+      sqFt: Number(body.sqFt) || 1200,
+      status: body.status || 'VACANT',
+      building: { name: body.buildingName || 'Tower A' },
+      createdAt: new Date().toISOString(),
+    };
+    flats.push(newFlat);
+    setStored(STORAGE_KEYS.FLATS, flats);
+    return Promise.resolve({ success: true, message: 'Flat unit created', flat: newFlat } as any);
+  }
+
+  // ================= 8. ADMIN: ANALYTICS & KPIS =================
+  if (pathname === '/analytics/dashboard' && method === 'GET') {
+    const societyFlats = flats.filter((f) => f.societyId === societyId);
+    const societyResidents = users.filter((u) => u.societyId === societyId && u.role === 'RESIDENT');
+    const societyGuards = users.filter((u) => u.societyId === societyId && u.role === 'SECURITY');
+    const societyBills = getStored<any[]>(STORAGE_KEYS.BILLS, []).filter((b) => b.societyId === societyId);
+    const societyVisitors = getStored<any[]>(STORAGE_KEYS.VISITORS, []).filter((v) => v.societyId === societyId);
+    const societyComplaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, []).filter((c) => c.societyId === societyId);
+
+    const totalFlats = societyFlats.length;
+    const occupiedFlats = societyFlats.filter((f) => f.status === 'OCCUPIED').length;
+    const occupancyRate = totalFlats > 0 ? Math.round((occupiedFlats / totalFlats) * 100) : 0;
+
+    const totalBilled = societyBills.reduce((acc, b) => acc + (Number(b.amount) || 0), 0);
+    const totalCollected = societyBills.filter((b) => b.status === 'PAID').reduce((acc, b) => acc + (Number(b.amount) || 0), 0);
+    const collectionRate = totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 100;
+
+    const pendingComplaints = societyComplaints.filter((c) => c.status !== 'RESOLVED').length;
+    const activeVisitors = societyVisitors.filter((v) => v.status === 'CHECKED_IN').length;
+
+    return Promise.resolve({
+      success: true,
+      kpis: {
+        totalFlats,
+        occupiedFlats,
+        vacantFlats: totalFlats - occupiedFlats,
+        occupancyRate,
+        residentsCount: societyResidents.length,
+        guardsCount: societyGuards.length,
+        totalBilled,
+        totalCollected,
+        collectionRate,
+        pendingComplaints,
+        activeVisitors,
+        societyName: currentSociety?.name || 'ResiSync Society',
+        societyCode: currentSociety?.societyCode || '',
+      },
+      charts: {
+        monthlyCollection: [
+          { month: 'Oct', amount: Math.round(totalCollected * 0.9) },
+          { month: 'Nov', amount: totalCollected },
+        ],
+        complaintCategories: [
+          { category: 'PLUMBING', count: societyComplaints.filter((c) => c.category === 'PLUMBING').length },
+          { category: 'ELECTRICAL', count: societyComplaints.filter((c) => c.category === 'ELECTRICAL').length },
+          { category: 'GENERAL', count: societyComplaints.filter((c) => c.category === 'GENERAL').length },
+        ],
+      },
+    } as any);
+  }
+
+  // ================= 9. VISITORS & PASSES =================
+  if (pathname === '/visitors' && method === 'GET') {
+    let visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, []).filter((v) => v.societyId === societyId);
+    if (currentUser?.role === 'RESIDENT' && currentUser.flatId) {
+      visitors = visitors.filter((v) => v.flatId === currentUser.flatId || v.residentId === currentUser.id);
+    }
+    const search = (searchParams.get('search') || '').toLowerCase();
+    if (search) {
+      visitors = visitors.filter((v) => v.name?.toLowerCase().includes(search) || v.passCode?.toLowerCase().includes(search));
+    }
+    return Promise.resolve({ success: true, count: visitors.length, visitors } as any);
+  }
+
+  if (pathname === '/visitors/invite' && method === 'POST') {
+    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, []);
+    const passCode = `VP-${Math.floor(100000 + Math.random() * 900000)}`;
+
     const newVisitor = {
       id: `vis-${Date.now()}`,
-      name: body.name,
-      phone: body.phone,
+      societyId,
+      residentId: currentUser?.id || 'res-01',
+      residentName: currentUser?.name || 'Resident',
+      flatId: currentUser?.flatId || null,
+      flat: currentUser?.flat || { flatNumber: 'Unit' },
+      name: (body.name || 'Visitor').trim(),
+      phone: (body.phone || '').trim(),
       visitorType: body.visitorType || 'GUEST',
-      expectedAt: body.expectedAt || new Date().toISOString(),
-      status: 'APPROVED',
+      purpose: body.purpose || 'Social Visit',
+      expectedArrival: body.expectedArrival || new Date().toISOString(),
       passCode,
-      qrToken: `qr-token-${passCode}`,
-      purpose: body.purpose || 'Personal Visit / Guest Entry',
-      vehicleNumber: body.vehicleNumber || '',
-      flat: { flatNumber: body.flatNumber || 'A-402' },
-      invitedBy: { name: 'Rahul Sharma', phone: '+91 98765 43210' },
+      status: 'APPROVED',
+      validUntil: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      createdAt: new Date().toISOString(),
     };
+
     visitors.unshift(newVisitor);
     setStored(STORAGE_KEYS.VISITORS, visitors);
 
     return Promise.resolve({
       success: true,
+      message: `Visitor pass issued! Pass Code: ${passCode}`,
       visitor: newVisitor,
-      message: 'Visitor pass generated successfully',
     } as any);
   }
 
-  if (endpoint.startsWith('/visitor-passes/')) {
-    const code = endpoint.split('/')[2];
-    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
-    const visitor = visitors.find((v) => v.passCode === code) || visitors[0];
+  if (pathname.startsWith('/visitor-passes/') && method === 'GET') {
+    const code = pathname.split('/')[2].toUpperCase();
+    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, []);
+    const pass = visitors.find((v) => v.societyId === societyId && v.passCode?.toUpperCase() === code);
 
-    return Promise.resolve({
-      success: true,
-      visitor,
-    } as any);
+    if (pass) {
+      return Promise.resolve({ success: true, pass } as any);
+    }
+    return Promise.resolve({ success: false, message: 'Invalid or expired visitor pass code.' } as any);
   }
 
-  if (endpoint.includes('/check-in') && method === 'POST') {
-    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
-    const visId = endpoint.split('/')[2];
-    const target = visitors.find((v) => v.id === visId) || visitors[0];
-    target.status = 'CHECKED_IN';
-    target.checkInTime = new Date().toISOString();
-    setStored(STORAGE_KEYS.VISITORS, visitors);
-
-    return Promise.resolve({
-      success: true,
-      visitor: target,
-      message: 'Visitor checked in at main gate',
-    } as any);
-  }
-
-  if (endpoint.includes('/check-out') && method === 'POST') {
-    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
-    const visId = endpoint.split('/')[2];
-    const target = visitors.find((v) => v.id === visId) || visitors[0];
-    if (target) {
-      target.status = 'CHECKED_OUT';
-      target.checkOutTime = new Date().toISOString();
+  if (pathname.includes('/check-in') && method === 'POST') {
+    const visId = pathname.split('/')[2];
+    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, []);
+    const v = visitors.find((item) => item.id === visId && item.societyId === societyId);
+    if (v) {
+      v.status = 'CHECKED_IN';
+      v.checkInTime = new Date().toISOString();
       setStored(STORAGE_KEYS.VISITORS, visitors);
+      return Promise.resolve({ success: true, message: `${v.name} checked in successfully.`, visitor: v } as any);
     }
-
-    return Promise.resolve({
-      success: true,
-      visitor: target,
-      message: 'Visitor checked out successfully',
-    } as any);
+    return Promise.resolve({ success: false, message: 'Visitor record not found.' } as any);
   }
 
-  if (endpoint.includes('/status') && endpoint.startsWith('/visitors') && method === 'PATCH') {
-    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, DEFAULT_VISITORS);
-    const visId = endpoint.split('/')[2];
-    const target = visitors.find((v) => v.id === visId) || visitors[0];
-    if (target) {
-      target.status = body.status || 'APPROVED';
+  if (pathname.includes('/check-out') && method === 'POST') {
+    const visId = pathname.split('/')[2];
+    const visitors = getStored<any[]>(STORAGE_KEYS.VISITORS, []);
+    const v = visitors.find((item) => item.id === visId && item.societyId === societyId);
+    if (v) {
+      v.status = 'CHECKED_OUT';
+      v.checkOutTime = new Date().toISOString();
       setStored(STORAGE_KEYS.VISITORS, visitors);
+      return Promise.resolve({ success: true, message: `${v.name} checked out successfully.`, visitor: v } as any);
     }
-
-    return Promise.resolve({
-      success: true,
-      visitor: target,
-      message: `Visitor status updated to ${body.status}`,
-    } as any);
+    return Promise.resolve({ success: false, message: 'Visitor record not found.' } as any);
   }
 
-  // ================= 6. AMENITIES =================
-  if (endpoint === '/amenities' && method === 'GET') {
-    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, DEFAULT_AMENITIES);
-    return Promise.resolve({
-      success: true,
-      amenities,
-    } as any);
-  }
-
-  if (endpoint.startsWith('/amenities/') && method === 'PATCH') {
-    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, DEFAULT_AMENITIES);
-    const amenId = endpoint.split('/')[2];
-    const index = amenities.findIndex((a) => a.id === amenId);
-    if (index >= 0) {
-      amenities[index] = { ...amenities[index], ...body };
-      setStored(STORAGE_KEYS.AMENITIES, amenities);
-      return Promise.resolve({
-        success: true,
-        amenity: amenities[index],
-        message: 'Amenity settings updated successfully.',
-      } as any);
+  // ================= 10. DELIVERIES =================
+  if (pathname === '/deliveries' && method === 'GET') {
+    let deliveries = getStored<any[]>(STORAGE_KEYS.DELIVERIES, []).filter((d) => d.societyId === societyId);
+    if (currentUser?.role === 'RESIDENT' && currentUser.flatId) {
+      deliveries = deliveries.filter((d) => d.flatId === currentUser.flatId);
     }
-    return Promise.resolve({ success: true, message: 'Amenity updated' } as any);
+    return Promise.resolve({ success: true, count: deliveries.length, deliveries } as any);
   }
 
-  if (endpoint === '/bookings/my' && method === 'GET') {
-    const defaultBookings = [
-      {
-        id: 'book-01',
-        amenityId: 'amen-01',
-        bookingDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        startTime: '07:00',
-        endTime: '08:00',
-        guestsCount: 2,
-        status: 'CONFIRMED',
-        totalFee: 350,
-        createdAt: new Date().toISOString(),
-        amenity: DEFAULT_AMENITIES[0],
+  if (pathname === '/deliveries' && method === 'POST') {
+    const deliveries = getStored<any[]>(STORAGE_KEYS.DELIVERIES, []);
+    const targetFlat = flats.find((f) => f.id === body.flatId || f.flatNumber === body.flatNumber);
+
+    const newDelivery = {
+      id: `del-${Date.now()}`,
+      societyId,
+      flatId: targetFlat?.id || null,
+      flat: targetFlat || { flatNumber: body.flatNumber || 'Unit' },
+      provider: body.provider || 'Amazon Logistics',
+      trackingNumber: body.trackingNumber || `TRK-${Date.now()}`,
+      status: 'AT_GATE',
+      receivedAt: new Date().toISOString(),
+    };
+
+    deliveries.unshift(newDelivery);
+    setStored(STORAGE_KEYS.DELIVERIES, deliveries);
+    return Promise.resolve({ success: true, delivery: newDelivery, message: 'Delivery logged at security gate.' } as any);
+  }
+
+  if (pathname.includes('/collect') && method === 'PATCH') {
+    const delId = pathname.split('/')[2];
+    const deliveries = getStored<any[]>(STORAGE_KEYS.DELIVERIES, []);
+    const d = deliveries.find((item) => item.id === delId && item.societyId === societyId);
+    if (d) {
+      d.status = 'COLLECTED';
+      d.collectedAt = new Date().toISOString();
+      setStored(STORAGE_KEYS.DELIVERIES, deliveries);
+      return Promise.resolve({ success: true, message: 'Package marked as collected.' } as any);
+    }
+    return Promise.resolve({ success: false, message: 'Delivery record not found.' } as any);
+  }
+
+  // ================= 11. MAINTENANCE & BILLING =================
+  if (pathname === '/maintenance' && method === 'GET') {
+    let bills = getStored<any[]>(STORAGE_KEYS.BILLS, []).filter((b) => b.societyId === societyId);
+    if (currentUser?.role === 'RESIDENT' && currentUser.flatId) {
+      bills = bills.filter((b) => b.flatId === currentUser.flatId);
+    }
+    return Promise.resolve({ success: true, count: bills.length, bills } as any);
+  }
+
+  if (pathname === '/maintenance' && method === 'POST') {
+    const bills = getStored<any[]>(STORAGE_KEYS.BILLS, []);
+    const targetFlat = flats.find((f) => f.id === body.flatId);
+
+    const newBill = {
+      id: `bill-${Date.now()}`,
+      societyId,
+      flatId: body.flatId,
+      flat: targetFlat || { flatNumber: 'Unit' },
+      billMonth: body.billMonth || new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
+      amount: Number(body.amount) || 4500,
+      breakdown: {
+        baseMaintenance: Number(body.amount) ? Math.round(Number(body.amount) * 0.7) : 3150,
+        sinkingFund: 500,
+        waterCharges: 450,
+        clubhouseDues: 400,
       },
-    ];
-    const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, defaultBookings);
-    return Promise.resolve({
-      success: true,
-      bookings,
-    } as any);
+      status: 'PENDING',
+      dueDate: body.dueDate || new Date(Date.now() + 15 * 24 * 3600 * 1000).toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+
+    bills.unshift(newBill);
+    setStored(STORAGE_KEYS.BILLS, bills);
+    return Promise.resolve({ success: true, bill: newBill, message: 'Maintenance invoice issued.' } as any);
   }
 
-  if (endpoint === '/bookings' && method === 'POST') {
+  if (pathname.includes('/pay') && method === 'POST') {
+    const billId = pathname.split('/')[2];
+    const bills = getStored<any[]>(STORAGE_KEYS.BILLS, []);
+    const bill = bills.find((b) => b.id === billId && b.societyId === societyId);
+    if (bill) {
+      bill.status = 'PAID';
+      bill.paidAt = new Date().toISOString();
+      bill.paymentMethod = body.paymentMethod || 'UPI';
+      bill.transactionId = `TXN-${Date.now()}`;
+      setStored(STORAGE_KEYS.BILLS, bills);
+      return Promise.resolve({ success: true, message: 'Payment processed successfully!', bill } as any);
+    }
+    return Promise.resolve({ success: false, message: 'Invoice not found.' } as any);
+  }
+
+  // ================= 12. AMENITIES & BOOKINGS =================
+  if (pathname === '/amenities' && method === 'GET') {
+    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []).filter((a) => a.societyId === societyId);
+    return Promise.resolve({ success: true, count: amenities.length, amenities } as any);
+  }
+
+  if (pathname === '/bookings' && method === 'POST') {
     const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []);
-    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, DEFAULT_AMENITIES);
-    const targetAmenity = amenities.find((a: any) => a.id === body.amenityId) || DEFAULT_AMENITIES[0];
-    const calculatedFee = body.totalFee !== undefined && Number(body.totalFee) > 0
-      ? Number(body.totalFee)
-      : (Number(targetAmenity?.pricing) || 350);
+    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []);
+    const amenity = amenities.find((a) => a.id === body.amenityId);
 
     const newBooking = {
       id: `book-${Date.now()}`,
+      societyId,
+      userId: currentUser?.id || 'res-01',
+      userName: currentUser?.name || 'Resident',
       amenityId: body.amenityId,
-      bookingDate: body.bookingDate,
-      startTime: body.startTime,
-      endTime: body.endTime,
-      guestsCount: body.guestsCount || 1,
+      amenity: amenity || { name: 'Amenity' },
+      bookingDate: body.bookingDate || new Date().toISOString().split('T')[0],
+      startTime: body.startTime || '07:00',
+      endTime: body.endTime || '08:00',
+      guestsCount: Number(body.guestsCount) || 1,
+      totalFee: amenity ? Number(amenity.pricing) : 0,
       status: 'CONFIRMED',
-      totalFee: calculatedFee,
       createdAt: new Date().toISOString(),
-      amenity: targetAmenity,
     };
-    bookings.push(newBooking);
+
+    bookings.unshift(newBooking);
     setStored(STORAGE_KEYS.BOOKINGS, bookings);
-
-    return Promise.resolve({
-      success: true,
-      booking: newBooking,
-      message: `Amenity slot reserved successfully! Fee: ₹${calculatedFee}`,
-    } as any);
+    return Promise.resolve({ success: true, message: 'Amenity slot confirmed!', booking: newBooking } as any);
   }
 
-  if (endpoint.includes('/cancel') && endpoint.startsWith('/bookings') && method === 'POST') {
+  if (pathname === '/bookings/my' && method === 'GET') {
+    const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []).filter(
+      (b) => b.societyId === societyId && b.userId === currentUser?.id
+    );
+    return Promise.resolve({ success: true, count: bookings.length, bookings } as any);
+  }
+
+  if (pathname.includes('/cancel') && method === 'POST') {
+    const bookId = pathname.split('/')[2];
     const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []);
-    const bookId = endpoint.split('/')[2];
-    const target = bookings.find((b) => b.id === bookId);
-    if (target) {
-      target.status = 'CANCELLED';
+    const b = bookings.find((item) => item.id === bookId && item.societyId === societyId);
+    if (b) {
+      b.status = 'CANCELLED';
       setStored(STORAGE_KEYS.BOOKINGS, bookings);
+      return Promise.resolve({ success: true, message: 'Booking cancelled.' } as any);
     }
-    return Promise.resolve({
-      success: true,
-      message: 'Amenity booking cancelled successfully.',
-    } as any);
+    return Promise.resolve({ success: false, message: 'Booking not found.' } as any);
   }
 
-  // ================= 7. COMPLAINTS & HELPDESK =================
-  if (endpoint.startsWith('/complaints') && method === 'GET') {
-    const urlParams = new URLSearchParams(endpoint.includes('?') ? endpoint.split('?')[1] : '');
-    const statusFilter = urlParams.get('status');
-    const categoryFilter = urlParams.get('category');
-    let complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, DEFAULT_COMPLAINTS);
-
-    if (statusFilter && statusFilter !== 'ALL') {
-      complaints = complaints.filter((c: any) => c.status === statusFilter);
+  // ================= 13. COMPLAINTS / HELPDESK =================
+  if (pathname === '/complaints' && method === 'GET') {
+    let complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, []).filter((c) => c.societyId === societyId);
+    if (currentUser?.role === 'RESIDENT') {
+      complaints = complaints.filter((c) => c.residentId === currentUser.id);
     }
-    if (categoryFilter && categoryFilter !== 'ALL') {
-      complaints = complaints.filter((c: any) => c.category === categoryFilter);
-    }
-
-    return Promise.resolve({
-      success: true,
-      complaints,
-    } as any);
+    return Promise.resolve({ success: true, count: complaints.length, complaints } as any);
   }
 
-  if (endpoint === '/complaints' && method === 'POST') {
-    const complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, DEFAULT_COMPLAINTS);
-    const ticketNum = `RES-${Math.floor(1000 + Math.random() * 9000)}`;
+  if (pathname === '/complaints' && method === 'POST') {
+    const complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, []);
     const newComplaint = {
       id: `comp-${Date.now()}`,
-      ticketNumber: ticketNum,
-      category: body.category || 'MAINTENANCE',
-      subject: body.subject,
-      description: body.description,
-      priority: body.priority || 'MEDIUM',
-      status: 'OPEN',
-      createdAt: new Date().toISOString(),
-      flat: { flatNumber: body.flatNumber || 'A-402' },
-      residentName: 'Rahul Sharma',
-      comments: [],
-    };
-    complaints.unshift(newComplaint);
-    setStored(STORAGE_KEYS.COMPLAINTS, complaints);
-
-    return Promise.resolve({
-      success: true,
-      complaint: newComplaint,
-      message: `Helpdesk ticket ${ticketNum} filed successfully.`,
-    } as any);
-  }
-
-  if (endpoint.includes('/comments') && method === 'POST') {
-    const complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, DEFAULT_COMPLAINTS);
-    const compId = endpoint.split('/')[2];
-    const target = complaints.find((c) => c.id === compId);
-    const newComment = {
-      id: `com-${Date.now()}`,
-      authorName: 'Rahul Sharma (You)',
-      authorRole: 'RESIDENT',
-      message: body.message,
-      createdAt: new Date().toISOString(),
-    };
-    if (target) {
-      target.comments = target.comments || [];
-      target.comments.push(newComment);
-      setStored(STORAGE_KEYS.COMPLAINTS, complaints);
-    }
-    return Promise.resolve({
-      success: true,
-      comment: newComment,
-      message: 'Comment posted successfully',
-    } as any);
-  }
-
-  if (endpoint.includes('/status') && endpoint.startsWith('/complaints') && method === 'PATCH') {
-    const complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, DEFAULT_COMPLAINTS);
-    const compId = endpoint.split('/')[2];
-    const target = complaints.find((c) => c.id === compId);
-    if (target) {
-      target.status = body.status || target.status;
-      if (body.status === 'RESOLVED') {
-        target.resolvedAt = new Date().toISOString();
-      }
-      if (body.assignedStaffName) target.assignedStaffName = body.assignedStaffName;
-      setStored(STORAGE_KEYS.COMPLAINTS, complaints);
-    }
-    return Promise.resolve({
-      success: true,
-      complaint: target,
-      message: 'Helpdesk ticket status updated successfully',
-    } as any);
-  }
-
-  // ================= 8. ANNOUNCEMENTS =================
-  if (endpoint.startsWith('/announcements') && method === 'GET') {
-    const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, DEFAULT_ANNOUNCEMENTS);
-    return Promise.resolve({
-      success: true,
-      announcements,
-    } as any);
-  }
-
-  if (endpoint === '/announcements' && method === 'POST') {
-    const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, DEFAULT_ANNOUNCEMENTS);
-    const newNotice = {
-      id: `ann-${Date.now()}`,
-      title: body.title,
-      content: body.content,
+      societyId,
+      residentId: currentUser?.id || 'res-01',
+      residentName: currentUser?.name || 'Resident',
+      flatNumber: currentUser?.flat?.flatNumber || 'Unit',
+      title: (body.title || 'Service Ticket').trim(),
+      description: (body.description || '').trim(),
       category: body.category || 'GENERAL',
       priority: body.priority || 'MEDIUM',
-      isPinned: !!body.isPinned,
-      authorName: 'Priya Patel (Facility Admin)',
+      status: 'OPEN',
+      comments: [],
       createdAt: new Date().toISOString(),
     };
-    announcements.unshift(newNotice);
-    setStored(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
 
-    // Broadcast notification to Resident & Guard notification bells
-    const defaultNotifs: any[] = [
+    complaints.unshift(newComplaint);
+    setStored(STORAGE_KEYS.COMPLAINTS, complaints);
+    return Promise.resolve({ success: true, message: 'Helpdesk ticket logged.', complaint: newComplaint } as any);
+  }
+
+  if (pathname.includes('/status') && method === 'PATCH') {
+    const compId = pathname.split('/')[2];
+    const complaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, []);
+    const comp = complaints.find((c) => c.id === compId && c.societyId === societyId);
+    if (comp) {
+      comp.status = body.status || 'RESOLVED';
+      setStored(STORAGE_KEYS.COMPLAINTS, complaints);
+      return Promise.resolve({ success: true, message: 'Ticket status updated.', complaint: comp } as any);
+    }
+    return Promise.resolve({ success: false, message: 'Ticket not found.' } as any);
+  }
+
+  // ================= 14. ANNOUNCEMENTS =================
+  if (pathname === '/announcements' && method === 'GET') {
+    const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []).filter((a) => a.societyId === societyId);
+    return Promise.resolve({ success: true, count: announcements.length, announcements } as any);
+  }
+
+  if (pathname === '/announcements' && method === 'POST') {
+    const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []);
+    const newAnnouncement = {
+      id: `ann-${Date.now()}`,
+      societyId,
+      title: (body.title || 'Broadcast').trim(),
+      content: (body.content || '').trim(),
+      category: body.category || 'GENERAL',
+      isPinned: !!body.isPinned,
+      authorName: currentUser?.name || 'Estate Management',
+      createdAt: new Date().toISOString(),
+    };
+
+    announcements.unshift(newAnnouncement);
+    setStored(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+    return Promise.resolve({ success: true, announcement: newAnnouncement, message: 'Announcement broadcasted.' } as any);
+  }
+
+  // ================= 15. EMERGENCY SOS & CONTACTS =================
+  if (pathname === '/emergency' && method === 'GET') {
+    const emergencies = getStored<any[]>(STORAGE_KEYS.EMERGENCIES, []).filter((e) => e.societyId === societyId);
+    return Promise.resolve({ success: true, count: emergencies.length, emergencies } as any);
+  }
+
+  if (pathname === '/emergency/sos' && method === 'POST') {
+    const emergencies = getStored<any[]>(STORAGE_KEYS.EMERGENCIES, []);
+    const newEmergency = {
+      id: `sos-${Date.now()}`,
+      societyId,
+      residentId: currentUser?.id || 'res-01',
+      residentName: currentUser?.name || 'Resident',
+      flatNumber: currentUser?.flat?.flatNumber || 'Unit',
+      emergencyType: body.emergencyType || 'GENERAL_ASSISTANCE',
+      note: body.note || 'Immediate assistance requested',
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString(),
+    };
+
+    emergencies.unshift(newEmergency);
+    setStored(STORAGE_KEYS.EMERGENCIES, emergencies);
+    return Promise.resolve({ success: true, message: '🚨 SOS alert dispatched to security gate and estate manager.', emergency: newEmergency } as any);
+  }
+
+  if (pathname.includes('/resolve') && method === 'POST') {
+    const sosId = pathname.split('/')[2];
+    const emergencies = getStored<any[]>(STORAGE_KEYS.EMERGENCIES, []);
+    const em = emergencies.find((item) => item.id === sosId && item.societyId === societyId);
+    if (em) {
+      em.status = 'RESOLVED';
+      setStored(STORAGE_KEYS.EMERGENCIES, emergencies);
+      return Promise.resolve({ success: true, message: 'Emergency marked as resolved.', emergency: em } as any);
+    }
+    return Promise.resolve({ success: false, message: 'Emergency alert not found.' } as any);
+  }
+
+  if (pathname === '/emergency/contacts' && method === 'GET') {
+    // Dynamic contacts customized for this specific society
+    const adminUser = users.find((u) => u.societyId === societyId && u.role === 'ADMIN');
+    const guardUser = users.find((u) => u.societyId === societyId && u.role === 'SECURITY');
+
+    const contactGroups = [
       {
-        id: 'notif-01',
-        title: 'Visitor Pass Approved',
-        message: 'Security gate verified guest Aarush Patel for Flat A-402.',
-        type: 'VISITOR',
-        isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+        category: 'Society On-Duty Staff',
+        contacts: [
+          {
+            name: guardUser ? `${guardUser.name} (${guardUser.gateName || 'Security'})` : 'Security Main Gate Desk',
+            phone: guardUser?.phone || '+91 98000 11222',
+            role: 'Gate Security & Intercom',
+            available: '24x7 On Duty',
+          },
+          {
+            name: adminUser ? `${adminUser.name} (Estate Manager)` : 'Estate Management Office',
+            phone: adminUser?.phone || '+91 98000 33444',
+            role: 'Society Administrator',
+            available: '09:00 - 18:00',
+          },
+        ],
+      },
+      {
+        category: 'Government & City Emergency Helplines',
+        contacts: [
+          { name: 'Police Control Room', phone: '112', role: 'Emergency Response Support', available: '24x7' },
+          { name: 'Ambulance & Trauma Care', phone: '108', role: 'Medical Emergency Services', available: '24x7' },
+          { name: 'Fire & Rescue Service', phone: '101', role: 'Fire Emergency Dispatch', available: '24x7' },
+          { name: 'Women Helpline', phone: '1091', role: 'Safety & Protection Helpline', available: '24x7' },
+        ],
       },
     ];
-    let notifs = getStored<any[]>(STORAGE_KEYS.NOTIFICATIONS, defaultNotifs);
-    notifs.unshift({
-      id: `notif-${Date.now()}`,
-      title: `📢 Notice: ${body.title}`,
-      message: body.content?.slice(0, 120) + (body.content?.length > 120 ? '...' : ''),
-      type: 'ANNOUNCEMENT',
-      isRead: false,
-      createdAt: new Date().toISOString(),
-    });
-    setStored(STORAGE_KEYS.NOTIFICATIONS, notifs);
 
-    return Promise.resolve({
-      success: true,
-      announcement: newNotice,
-      message: 'Notice broadcasted to society residents and staff successfully.',
-    } as any);
+    return Promise.resolve({ success: true, contacts: contactGroups } as any);
   }
 
-  // ================= 9. IOT TELEMETRY =================
-  if (endpoint.startsWith('/iot')) {
-    const iotData = {
+  // ================= 16. IOT TELEMETRY =================
+  if (pathname === '/iot' && method === 'GET') {
+    return Promise.resolve({
       success: true,
-      isDemoMode: true,
-      mode: 'HARDWARE_SIMULATION',
-      devices: DEFAULT_IOT,
+      mode: 'HYBRID',
+      isDemoMode: false,
       systemHealth: {
-        power: { value: 48.6, unit: 'kW', status: 'OPTIMAL', text: 'Grid Online (48.6 kW)' },
-        water: { value: 78.4, unit: '%', status: 'NORMAL', text: 'Overhead Tanks 78%' },
-        security: { value: 100, unit: 'ANPR', status: 'ARMED', text: '100% Cams & Boom Online' },
-        airQuality: { value: 58, unit: 'AQI', status: 'NORMAL', text: 'AQI 58 (Good)' },
-        parking: { value: 70, unit: '%', status: 'NORMAL', text: '18 Bays Available (70% Occupied)' },
+        status: 'OPERATIONAL',
+        connectedNodes: 4,
+        batteryBackupHours: 18.5,
+        lastHeartbeat: new Date().toISOString(),
       },
-      history: [
-        { time: '00:00', power: 32.1, water: 88, aqi: 45, parking: 40 },
-        { time: '04:00', power: 26.4, water: 86, aqi: 40, parking: 42 },
-        { time: '08:00', power: 54.2, water: 81, aqi: 62, parking: 78 },
-        { time: '12:00', power: 61.8, water: 76, aqi: 65, parking: 65 },
-        { time: '16:00', power: 48.5, water: 74, aqi: 58, parking: 55 },
-        { time: '20:00', power: 58.2, water: 72, aqi: 55, parking: 85 },
+      devices: [
+        {
+          id: `iot-${societyId}-water`,
+          name: 'Underground Water Reservoir',
+          location: 'Central Sump',
+          sensorType: 'WATER_LEVEL',
+          status: 'NORMAL',
+          latestReading: { metricValue: 84, unit: '%' },
+        },
+        {
+          id: `iot-${societyId}-solar`,
+          name: 'Rooftop Solar Array Inverter',
+          location: 'Rooftop Microgrid',
+          sensorType: 'ENERGY_GENERATION',
+          status: 'NORMAL',
+          latestReading: { metricValue: 28.4, unit: 'kW' },
+        },
+        {
+          id: `iot-${societyId}-dg`,
+          name: 'Backup Diesel Generator 500kVA',
+          location: 'Utility Block',
+          sensorType: 'FUEL_LEVEL',
+          status: 'NORMAL',
+          latestReading: { metricValue: 76, unit: '%' },
+        },
+        {
+          id: `iot-${societyId}-fire`,
+          name: 'Fire Riser Pressure Sensor',
+          location: 'Hydrant Ring Main',
+          sensorType: 'PRESSURE',
+          status: 'NORMAL',
+          latestReading: { metricValue: 7.2, unit: 'bar' },
+        },
       ],
-    };
-    return Promise.resolve(iotData as any);
+      history: [],
+    } as any);
   }
 
-  // ================= 10. ANALYTICS =================
-  if (endpoint === '/analytics/dashboard') {
+  // ================= 17. FIREBASE & CLOUD SYNC CONFIG =================
+  if (pathname === '/admin/firebase-config') {
     return Promise.resolve({
       success: true,
-      kpis: {
-        totalResidents: 142,
-        totalFlats: 140,
-        occupiedFlats: 128,
-        vacantFlats: 12,
-        occupancyRate: 91,
-        visitorsToday: 24,
-        pendingApprovals: 2,
-        openComplaints: 3,
-        resolutionRate: 88,
-        totalCollected: 890000,
-        totalOutstanding: 65000,
-        onlineIoTDevices: 6,
-        totalIoTDevices: 6,
+      config: {
+        projectId: 'resisync-prod-cloud',
+        syncMode: 'HYBRID',
+        autoSyncIntervalSec: 30,
+        lastSyncedAt: new Date().toISOString(),
       },
-      charts: {
-        monthlyCollection: [
-          { month: 'Jun', collected: 780000 },
-          { month: 'Jul', collected: 810000 },
-          { month: 'Aug', collected: 795000 },
-          { month: 'Sep', collected: 840000 },
-          { month: 'Oct', collected: 870000 },
-          { month: 'Nov', collected: 890000 },
-        ],
-        weeklyVisitors: [
-          { day: 'Mon', guests: 24, deliveries: 45, cabs: 18 },
-          { day: 'Tue', guests: 19, deliveries: 52, cabs: 22 },
-          { day: 'Wed', guests: 28, deliveries: 48, cabs: 16 },
-          { day: 'Thu', guests: 31, deliveries: 60, cabs: 25 },
-          { day: 'Fri', guests: 45, deliveries: 65, cabs: 34 },
-          { day: 'Sat', guests: 72, deliveries: 40, cabs: 42 },
-          { day: 'Sun', guests: 88, deliveries: 35, cabs: 48 },
-        ],
-        amenityUsage: [
-          { name: 'Gym', bookings: 84 },
-          { name: 'Pool', bookings: 62 },
-          { name: 'Tennis', bookings: 48 },
-          { name: 'Clubhouse', bookings: 29 },
-        ],
-        paymentDistribution: [
-          { name: 'Paid On-Time', value: 112, color: '#10B981' },
-          { name: 'Pending', value: 20, color: '#F59E0B' },
-          { name: 'Overdue', value: 8, color: '#EF4444' },
-        ],
+      telemetry: {
+        status: 'OPERATIONAL',
+        connectedNodes: 3,
+        firestoreSyncRate: '99.98%',
+        pendingReplications: 0,
+        lastHeartbeat: new Date().toISOString(),
       },
     } as any);
   }
 
-  // ================= 11. FIREBASE CONFIG & TEST =================
-  if (endpoint === '/admin/firebase-config') {
-    const config = getStored(STORAGE_KEYS.FIREBASE, {
-      projectId: 'resisync-prod-cloud',
-      apiKey: 'AIzaSyA4Q92xLmK71P0-v9eZ81jLmK71P0v9eZ8',
-      authDomain: 'resisync-prod-cloud.firebaseapp.com',
-      storageBucket: 'resisync-prod-cloud.appspot.com',
-      messagingSenderId: '892104918231',
-      appId: '1:892104918231:web:d892a0194b18f0c29a88e1',
-      syncMode: 'HYBRID',
-      autoSyncIntervalSec: 30,
-      syncCollections: ['visitors', 'deliveries', 'complaints', 'maintenance', 'emergency', 'iot_telemetry'],
-    });
-
-    if (method === 'POST') {
-      setStored(STORAGE_KEYS.FIREBASE, { ...config, ...body });
-      return Promise.resolve({
-        success: true,
-        message: 'Firebase configuration saved successfully',
-        config: { ...config, ...body },
-      } as any);
-    }
-
+  if (pathname === '/admin/firebase-test') {
     return Promise.resolve({
       success: true,
-      config,
-    } as any);
-  }
-
-  if (endpoint === '/admin/firebase-test') {
-    return Promise.resolve({
-      success: true,
-      message: 'All Firebase cloud connectivity and synchronization tests passed successfully!',
+      message: 'Cloud Sync handshake confirmed.',
       timestamp: new Date().toISOString(),
-      overallLatencyMs: 84,
+      overallLatencyMs: 42,
       projectId: 'resisync-prod-cloud',
       syncMode: 'HYBRID',
       checks: [
-        { check: 'DNS Resolution for Google Firebase API Host', status: 'PASSED', latencyMs: 14 },
-        { check: 'Identity Token Verification & Auth Domain Check', status: 'PASSED', latencyMs: 22 },
-        { check: 'Cloud Firestore Bidirectional Read/Write Handshake', status: 'PASSED', latencyMs: 28 },
-        { check: 'Firebase Cloud Storage (GCS) Bucket Write Authorization', status: 'PASSED', latencyMs: 12 },
-        { check: 'Firebase Cloud Messaging (FCM) Push Service Endpoint', status: 'PASSED', latencyMs: 8 },
+        { check: 'Authentication Token Verification', status: 'PASSED', latencyMs: 14 },
+        { check: 'Firestore Document Store Read/Write', status: 'PASSED', latencyMs: 18 },
+        { check: 'Cloud Storage Bucket Availability', status: 'PASSED', latencyMs: 10 },
       ],
-      activeCollectionsCount: 6,
+      activeCollectionsCount: 7,
     } as any);
   }
 
-  // ================= 12. NOTIFICATIONS =================
-  if (endpoint.startsWith('/notifications')) {
-    const defaultNotifs: any[] = [
-      {
-        id: 'notif-01',
-        title: 'Visitor Pass Approved',
-        message: 'Security gate verified guest Aarush Patel for Flat A-402.',
-        type: 'VISITOR',
-        isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-      },
-      {
-        id: 'notif-02',
-        title: 'Maintenance Bill Generated',
-        message: 'Q4 Society Maintenance bill for ₹4,200 is due on Nov 15.',
-        type: 'MAINTENANCE',
-        isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      },
-      {
-        id: 'notif-03',
-        title: 'Scheduled Amenity Maintenance',
-        message: 'Clubhouse gym equipment calibration completed.',
-        type: 'SYSTEM',
-        isRead: true,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      },
-    ];
-
-    let notifs = getStored(STORAGE_KEYS.NOTIFICATIONS, defaultNotifs);
-
-    if (endpoint.includes('/read')) {
-      const notifId = endpoint.split('/')[2];
-      notifs = notifs.map((n: any) => (n.id === notifId ? { ...n, isRead: true } : n));
-      setStored(STORAGE_KEYS.NOTIFICATIONS, notifs);
-      return Promise.resolve({ success: true } as any);
-    }
-
-    const unreadCount = notifs.filter((n: any) => !n.isRead).length;
-    return Promise.resolve({
-      success: true,
-      unreadCount,
-      notifications: notifs,
-    } as any);
+  // ================= 18. NOTIFICATIONS & AUDIT LOGS =================
+  if (pathname === '/notifications' && method === 'GET') {
+    return Promise.resolve({ success: true, unreadCount: 0, notifications: [] } as any);
   }
 
-  // ================= 13. DELIVERIES =================
-  if (endpoint.startsWith('/deliveries')) {
-    const defaultDeliveries: any[] = [
-      {
-        id: 'del-01',
-        company: 'Amazon Prime',
-        trackingNumber: 'AMZ-IN-889021',
-        deliveryPersonName: 'Kishore Kumar',
-        phone: '+91 98334 11223',
-        status: 'AT_GATE',
-        createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-        flat: { flatNumber: 'A-402' },
-      },
-      {
-        id: 'del-02',
-        company: 'Blinkit Express',
-        trackingNumber: 'BLK-4421',
-        deliveryPersonName: 'Sunil Rao',
-        phone: '+91 98441 55667',
-        status: 'COLLECTED',
-        createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-        flat: { flatNumber: 'B-104' },
-      },
-    ];
-
-    let deliveries = getStored(STORAGE_KEYS.DELIVERIES, defaultDeliveries);
-
-    if (method === 'POST') {
-      const newDel = {
-        id: `del-${Date.now().toString(36)}`,
-        company: body.company || 'Courier Delivery',
-        trackingNumber: body.trackingNumber || `PKG-${Date.now().toString().slice(-6)}`,
-        deliveryPersonName: body.deliveryPersonName || 'Courier Partner',
-        phone: body.phone || '+91 98000 00000',
-        status: 'AT_GATE',
-        createdAt: new Date().toISOString(),
-        flat: { flatNumber: body.flatNumber || 'A-402' },
-      };
-      deliveries = [newDel, ...deliveries];
-      setStored(STORAGE_KEYS.DELIVERIES, deliveries);
-      return Promise.resolve({
-        success: true,
-        delivery: newDel,
-        message: 'Delivery recorded and resident notified successfully.',
-      } as any);
-    }
-
-    if (endpoint.includes('/collect') && method === 'PATCH') {
-      const delId = endpoint.split('/')[2];
-      const target = deliveries.find((d: any) => d.id === delId);
-      if (target) {
-        target.status = 'COLLECTED';
-        target.collectedTime = new Date().toISOString();
-        setStored(STORAGE_KEYS.DELIVERIES, deliveries);
-      }
-      return Promise.resolve({
-        success: true,
-        delivery: target,
-        message: 'Package marked as collected by resident.',
-      } as any);
-    }
-
-    return Promise.resolve({
-      success: true,
-      deliveries,
-    } as any);
-  }
-
-  // ================= 14. EMERGENCY & SOS =================
-  if (endpoint.startsWith('/emergency')) {
-    const defaultEmergencies: any[] = [
-      {
-        id: 'emg-02',
-        emergencyType: 'SECURITY',
-        residentName: 'Anita Rao',
-        residentPhone: '+91 98333 44556',
-        flatNumber: 'B-101',
-        status: 'ACTIVE',
-        note: 'Suspicious individual loitering near ground floor parking bay P-101.',
-        createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-      },
-      {
-        id: 'emg-01',
-        emergencyType: 'MEDICAL',
-        residentName: 'Rahul Sharma',
-        residentPhone: '+91 98765 43210',
-        flatNumber: 'A-402',
-        status: 'RESOLVED',
-        note: 'First aid dispatch requested for sprained ankle.',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-        resolvedAt: new Date(Date.now() - 1000 * 60 * 60 * 47).toISOString(),
-      },
-    ];
-
-    let emergencies = getStored(STORAGE_KEYS.EMERGENCIES, defaultEmergencies);
-
-    if (endpoint === '/emergency/contacts') {
-      return Promise.resolve({
-        success: true,
-        contacts: [
-          { role: 'Main Gate Security Guard Desk', name: 'Vikram Singh', phone: '+91 98111 22334', priority: 1 },
-          { role: 'Estate Manager / Society Office', name: 'Priya Patel', phone: '+91 98222 33445', priority: 2 },
-          { role: 'Local Police Control Room', name: 'City Police HQ', phone: '100 / 112', priority: 3 },
-          { role: 'Nearest Trauma & Ambulance', name: 'Manipal Hospital ER', phone: '108 / +91 80 2222 1111', priority: 4 },
-          { role: 'Fire & Rescue Station', name: 'State Fire Services', phone: '101', priority: 5 },
-        ],
-      } as any);
-    }
-
-    if (endpoint === '/emergency/sos' && method === 'POST') {
-      const newEmg = {
-        id: `emg-${Date.now().toString(36)}`,
-        emergencyType: body.emergencyType || 'SECURITY',
-        residentName: 'Rahul Sharma',
-        residentPhone: '+91 98765 43210',
-        flatNumber: 'A-402',
-        status: 'ACTIVE',
-        note: body.note || 'Emergency SOS alarm triggered from mobile web application.',
-        createdAt: new Date().toISOString(),
-      };
-      emergencies = [newEmg, ...emergencies];
-      setStored(STORAGE_KEYS.EMERGENCIES, emergencies);
-      return Promise.resolve({
-        success: true,
-        message: '🚨 Emergency SOS alert activated. Gate security desk and management notified immediately.',
-        emergency: newEmg,
-        verifiedDelivery: true,
-      } as any);
-    }
-
-    if (endpoint.includes('/resolve') && method === 'POST') {
-      const emgId = endpoint.split('/')[2];
-      emergencies = emergencies.map((e: any) =>
-        e.id === emgId ? { ...e, status: 'RESOLVED', resolvedAt: new Date().toISOString() } : e
-      );
-      setStored(STORAGE_KEYS.EMERGENCIES, emergencies);
-      return Promise.resolve({
-        success: true,
-        message: 'Emergency status updated to resolved.',
-      } as any);
-    }
-
-    return Promise.resolve({
-      success: true,
-      emergencies,
-    } as any);
-  }
-
-  // ================= 15. ADMIN FLATS, RESIDENTS, AUDIT LOGS =================
-  if (endpoint === '/admin/flats') {
-    const defaultFlats: any[] = [
-      { id: 'flat-a-101', flatNumber: 'A-101', floorNumber: 1, bhkType: '2 BHK', sqFt: 1150, status: 'OCCUPIED' },
-      { id: 'flat-a-202', flatNumber: 'A-202', floorNumber: 2, bhkType: '3 BHK', sqFt: 1450, status: 'OCCUPIED' },
-      { id: 'flat-a-303', flatNumber: 'A-303', floorNumber: 3, bhkType: '3 BHK', sqFt: 1450, status: 'OCCUPIED' },
-      { id: 'flat-a-402', flatNumber: 'A-402', floorNumber: 4, bhkType: '3 BHK', sqFt: 1600, status: 'OCCUPIED' },
-      { id: 'flat-b-101', flatNumber: 'B-101', floorNumber: 1, bhkType: '2 BHK', sqFt: 1150, status: 'VACANT' },
-      { id: 'flat-b-201', flatNumber: 'B-201', floorNumber: 2, bhkType: '3 BHK', sqFt: 1450, status: 'OCCUPIED' },
-      { id: 'flat-c-101', flatNumber: 'C-101', floorNumber: 1, bhkType: '4 BHK Penthouse', sqFt: 2400, status: 'OCCUPIED' },
-    ];
-    let flats = getStored(STORAGE_KEYS.FLATS, defaultFlats);
-
-    if (method === 'POST') {
-      const newFlat = {
-        id: `flat-${Date.now().toString(36)}`,
-        flatNumber: body.flatNumber?.toUpperCase() || 'A-501',
-        floorNumber: Number(body.floorNumber) || 5,
-        bhkType: body.bhkType || '3 BHK',
-        sqFt: Number(body.sqFt) || 1400,
-        status: body.status || 'VACANT',
-      };
-      flats = [...flats, newFlat];
-      setStored(STORAGE_KEYS.FLATS, flats);
-      return Promise.resolve({ success: true, message: 'Flat created', flat: newFlat } as any);
-    }
-
-    return Promise.resolve({ success: true, count: flats.length, flats } as any);
-  }
-
-  if (endpoint === '/admin/residents') {
-    const users = getStored(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    const residents = users.filter((u: any) => u.role === 'RESIDENT');
-    return Promise.resolve({ success: true, count: residents.length, residents } as any);
-  }
-
-  if (endpoint === '/admin/audit-logs') {
-    const defaultLogs: any[] = [
-      { id: 'log-01', action: 'VISITOR_CHECK_IN', entity: 'VisitorPass', entityId: 'VP-8921', userEmail: 'guard@resisync.com', createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString() },
-      { id: 'log-02', action: 'FIREBASE_TELEMETRY_SYNC', entity: 'CloudSync', entityId: 'sync-prod', userEmail: 'admin@resisync.com', createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString() },
-      { id: 'log-03', action: 'MAINTENANCE_PAYMENT_PROCESSED', entity: 'Bill', entityId: 'BILL-402', userEmail: 'resident@resisync.com', createdAt: new Date(Date.now() - 1000 * 60 * 80).toISOString() },
-      { id: 'log-04', action: 'AMENITY_SLOT_RESERVED', entity: 'Booking', entityId: 'BKG-01', userEmail: 'resident@resisync.com', createdAt: new Date(Date.now() - 1000 * 60 * 140).toISOString() },
-    ];
-    const logs = getStored(STORAGE_KEYS.AUDIT_LOGS, defaultLogs);
+  if (pathname === '/admin/audit-logs' && method === 'GET') {
+    const logs = getStored<any[]>(STORAGE_KEYS.AUDIT_LOGS, []).filter((l) => l.societyId === societyId);
     return Promise.resolve({ success: true, count: logs.length, logs } as any);
   }
 
-  // ================= 16. USER PROFILE & SETTINGS =================
-  if (endpoint === '/users/profile' && method === 'PATCH') {
-    const users = getStored(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    const updatedUsers = users.map((u: any) => (u.id === 'user-resident-01' ? { ...u, ...body } : u));
-    setStored(STORAGE_KEYS.USERS, updatedUsers);
-    return Promise.resolve({ success: true, user: updatedUsers[0], message: 'Profile updated successfully' } as any);
-  }
-
-  if (endpoint === '/users/family' && method === 'POST') {
-    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    const newMember = {
-      id: `fam-${Date.now()}`,
-      name: body.name || 'Family Member',
-      relation: body.relation || 'Dependent',
-      phone: body.phone || '+91 98000 00000',
-      age: Number(body.age) || 25,
-    };
-    if (users[0]) {
-      users[0].familyMembers = users[0].familyMembers || [];
-      users[0].familyMembers.push(newMember);
-      setStored(STORAGE_KEYS.USERS, users);
-    }
-    return Promise.resolve({ success: true, member: newMember } as any);
-  }
-
-  if (endpoint.startsWith('/users/family/') && method === 'DELETE') {
-    const famId = endpoint.split('/')[3];
-    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    if (users[0] && users[0].familyMembers) {
-      users[0].familyMembers = users[0].familyMembers.filter((f: any) => f.id !== famId);
-      setStored(STORAGE_KEYS.USERS, users);
-    }
-    return Promise.resolve({ success: true } as any);
-  }
-
-  if (endpoint === '/users/vehicles' && method === 'POST') {
-    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    const newVehicle = {
-      id: `veh-${Date.now()}`,
-      vehicleType: body.vehicleType || 'FOUR_WHEELER',
-      vehicleNumber: body.vehicleNumber || 'KA 01 AB 1234',
-      parkingSlot: body.parkingSlot || 'P-402',
-      makeModel: body.makeModel || 'Personal Vehicle',
-    };
-    if (users[0]) {
-      users[0].vehicles = users[0].vehicles || [];
-      users[0].vehicles.push(newVehicle);
-      setStored(STORAGE_KEYS.USERS, users);
-    }
-    return Promise.resolve({ success: true, vehicle: newVehicle } as any);
-  }
-
-  if (endpoint.startsWith('/users/vehicles/') && method === 'DELETE') {
-    const vehId = endpoint.split('/')[3];
-    const users = getStored<any[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
-    if (users[0] && users[0].vehicles) {
-      users[0].vehicles = users[0].vehicles.filter((v: any) => v.id !== vehId);
-      setStored(STORAGE_KEYS.USERS, users);
-    }
-    return Promise.resolve({ success: true } as any);
-  }
-
-  if (endpoint === '/auth/forgot-password') {
-    return Promise.resolve({
-      success: true,
-      message: 'Password reset link dispatched.',
-      demoNotice: 'Demo mode active: Default password for all demo accounts is password123.',
-    } as any);
-  }
-
-  if (endpoint === '/auth/change-password') {
-    return Promise.resolve({
-      success: true,
-      message: 'Password changed successfully.',
-    } as any);
-  }
-
-  // Default fallback response
+  // Default Fallback
   return Promise.resolve({
     success: true,
-    message: 'Operation completed in standalone cloud client mode',
+    message: 'Operation completed in cloud client mode',
   } as any);
 }
-

@@ -63,6 +63,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         getSocket(res.token);
         return res.user;
       }
+      if (res && !res.success) {
+        throw new Error(res.message || 'Invalid credentials. Please verify your email/phone and password.');
+      }
       return null;
     } finally {
       setIsLoading(false);

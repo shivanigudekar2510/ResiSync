@@ -62,6 +62,11 @@ import {
   getFlats,
   createFlat,
   getResidents,
+  createResident,
+  deleteResident,
+  getGuards,
+  createGuard,
+  deleteGuard,
   getAuditLogs,
   getNotifications,
   markNotificationRead,
@@ -154,6 +159,11 @@ router.patch('/notifications/:id/read', authenticateToken, markNotificationRead)
 router.get('/admin/flats', authenticateToken, requireRole('ADMIN', 'SECURITY'), getFlats);
 router.post('/admin/flats', authenticateToken, requireRole('ADMIN'), createFlat);
 router.get('/admin/residents', authenticateToken, requireRole('ADMIN'), getResidents);
+router.post('/admin/residents', authenticateToken, requireRole('ADMIN'), createResident);
+router.delete('/admin/residents/:id', authenticateToken, requireRole('ADMIN'), deleteResident);
+router.get('/admin/guards', authenticateToken, requireRole('ADMIN', 'SECURITY'), getGuards);
+router.post('/admin/guards', authenticateToken, requireRole('ADMIN'), createGuard);
+router.delete('/admin/guards/:id', authenticateToken, requireRole('ADMIN'), deleteGuard);
 router.get('/admin/audit-logs', authenticateToken, requireRole('ADMIN'), getAuditLogs);
 
 // ================= FIREBASE & CLOUD SYNC =================

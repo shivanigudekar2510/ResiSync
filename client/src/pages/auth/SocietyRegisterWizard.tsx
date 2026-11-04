@@ -45,31 +45,29 @@ export const SocietyRegisterWizard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Step 1: Society Info
-  const [societyName, setSocietyName] = useState('Prestige Falcon City');
-  const [reraId, setReraId] = useState('PRM/KA/RERA/1251/310/PR/170915/000244');
-  const [address, setAddress] = useState('Kanakapura Main Road, Anjanadri Layout');
-  const [city, setCity] = useState('Bengaluru');
-  const [state, setState] = useState('Karnataka');
-  const [zipCode, setZipCode] = useState('560062');
+  const [societyName, setSocietyName] = useState('');
+  const [reraId, setReraId] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [zipCode, setZipCode] = useState('');
 
   // Step 2: Infrastructure
-  const [wings, setWings] = useState<string[]>(['Tower A', 'Tower B', 'Tower C', 'Tower D']);
+  const [wings, setWings] = useState<string[]>(['Tower A', 'Tower B']);
   const [newWingInput, setNewWingInput] = useState('');
-  const [totalFlats, setTotalFlats] = useState<number>(240);
+  const [totalFlats, setTotalFlats] = useState<number>(40);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([
     'Club House',
     'Swimming Pool',
     'Fitness Gym',
-    'Tennis Court',
-    'EV Charging Hub',
   ]);
 
   // Step 3: Admin Account
-  const [adminName, setAdminName] = useState('Vikramaditya Rao');
+  const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
-  const [adminPhone, setAdminPhone] = useState('+91 98450 11223');
-  const [adminPassword, setAdminPassword] = useState('password123');
-  const [confirmPassword, setConfirmPassword] = useState('password123');
+  const [adminPhone, setAdminPhone] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Step 4: Output
   const [registeredSociety, setRegisteredSociety] = useState<any>(null);
@@ -157,6 +155,9 @@ export const SocietyRegisterWizard: React.FC = () => {
         try {
           localStorage.setItem('resisync_society_name', res.society?.name || societyName);
           localStorage.setItem('resisync_society_code', res.societyCode || 'PRSTG-2026');
+          if (res.society?.id) {
+            localStorage.setItem('resisync_society_id', res.society.id);
+          }
         } catch {}
         if (setAuthUser) {
           setAuthUser(res.user, res.token);
@@ -168,6 +169,8 @@ export const SocietyRegisterWizard: React.FC = () => {
           colors: ['#FF8A00', '#FFAE42', '#10B981', '#FFFFFF'],
         });
         setCurrentStep(4);
+      } else {
+        setError(res.message || 'Society onboarding failed. Please verify your entries.');
       }
     } catch (err: any) {
       setError(err.message || 'Society onboarding failed. Please verify your entries.');

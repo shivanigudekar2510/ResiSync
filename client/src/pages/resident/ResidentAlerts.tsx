@@ -76,6 +76,22 @@ export const ResidentAlerts: React.FC = () => {
     }
   };
 
+  // Normalize contacts: safely handles flat array, grouped array, or undefined
+  const contactGroups = Array.isArray(contacts) && contacts.length > 0
+    ? (contacts[0]?.contacts && Array.isArray(contacts[0].contacts)
+        ? contacts
+        : [
+            {
+              category: 'Immediate Emergency Contacts',
+              contacts: contacts.map((c: any) => ({
+                name: c.role || c.name || 'Emergency Helpline',
+                phone: c.phone || '112',
+                available: c.available || (c.priority === 1 ? '24x7 Gate Desk' : '24x7 Active'),
+              })),
+            },
+          ])
+    : [];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -118,55 +134,65 @@ export const ResidentAlerts: React.FC = () => {
           </div>
 
           {/* Announcements Feed */}
-          {announcements.map((ann) => (
-            <div
-              key={ann.id}
-              className={`bg-card rounded-2xl border p-5 transition-all shadow-sm ${
-                ann.isPinned
-                  ? 'border-primary/50 shadow-orange-glow'
-                  : 'border-border hover:border-border-light'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
-                      ann.category === 'URGENT'
-                        ? 'bg-status-danger/15 text-status-danger border border-status-danger/30'
-                        : ann.category === 'MAINTENANCE'
-                        ? 'bg-status-warning/15 text-status-warning border border-status-warning/30'
-                        : 'bg-primary/15 text-primary border border-primary/30'
-                    }`}
-                  >
-                    {ann.category}
-                  </span>
-                  {ann.isPinned && (
-                    <span className="flex items-center gap-1 text-[11px] text-primary font-semibold">
-                      <Pin className="w-3 h-3" /> Pinned Advisory
+          {announcements.length === 0 ? (
+            <div className="p-8 bg-card rounded-2xl border border-dashed border-border text-center">
+              <Bell className="w-8 h-8 text-text-muted mx-auto mb-2 opacity-50" />
+              <p className="text-xs font-semibold text-text-secondary">No notices in this category</p>
+              <p className="text-[11px] text-text-muted mt-0.5">Check back later for society broadcasts and alerts</p>
+            </div>
+          ) : (
+            announcements.map((ann) => (
+              <div
+                key={ann.id}
+                className={`bg-card rounded-2xl border p-5 transition-all shadow-sm ${
+                  ann.isPinned
+                    ? 'border-primary/50 shadow-orange-glow'
+                    : 'border-border hover:border-border-light'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                        ann.category === 'URGENT'
+                          ? 'bg-status-danger/15 text-status-danger border border-status-danger/30'
+                          : ann.category === 'MAINTENANCE'
+                          ? 'bg-status-warning/15 text-status-warning border border-status-warning/30'
+                          : 'bg-primary/15 text-primary border border-primary/30'
+                      }`}
+                    >
+                      {ann.category || 'GENERAL'}
                     </span>
-                  )}
+                    {ann.isPinned && (
+                      <span className="flex items-center gap-1 text-[11px] text-primary font-semibold">
+                        <Pin className="w-3 h-3" /> Pinned Advisory
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="text-[11px] text-text-muted flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {ann.createdAt
+                      ? new Date(ann.createdAt).toLocaleDateString('en-IN', {
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                      : 'Recent'}
+                  </span>
                 </div>
 
-                <span className="text-[11px] text-text-muted flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {new Date(ann.createdAt).toLocaleDateString('en-IN', {
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </span>
-              </div>
+                <h3 className="font-bold text-sm text-text-primary mt-1">{ann.title || 'Untitled Notice'}</h3>
+                <p className="text-xs text-text-secondary mt-2 leading-relaxed whitespace-pre-line">
+                  {ann.content || ''}
+                </p>
 
-              <h3 className="font-bold text-sm text-text-primary mt-1">{ann.title}</h3>
-              <p className="text-xs text-text-secondary mt-2 leading-relaxed whitespace-pre-line">
-                {ann.content}
-              </p>
-
-              <div className="mt-4 pt-3 border-t border-border/60 text-[11px] text-text-muted flex items-center justify-between">
-                <span>Issued by: <strong className="text-text-secondary">{ann.authorName}</strong></span>
-                <span>Greenview Society Management</span>
+                <div className="mt-4 pt-3 border-t border-border/60 text-[11px] text-text-muted flex items-center justify-between">
+                  <span>Issued by: <strong className="text-text-secondary">{ann.authorName || 'Estate Management'}</strong></span>
+                  <span>Greenview Society Management</span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Right 1 Col: Emergency Numbers Directory */}
@@ -178,33 +204,39 @@ export const ResidentAlerts: React.FC = () => {
             </h3>
 
             <div className="space-y-4">
-              {contacts.map((group, idx) => (
-                <div key={idx} className="space-y-2">
-                  <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                    {group.category}
-                  </p>
-                  <div className="space-y-2">
-                    {group.contacts.map((c: any, cIdx: number) => (
-                      <div
-                        key={cIdx}
-                        className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between"
-                      >
-                        <div>
-                          <p className="text-xs font-semibold text-text-primary">{c.name}</p>
-                          <p className="text-[10px] text-text-muted">{c.available}</p>
-                        </div>
-                        <a
-                          href={`tel:${c.phone}`}
-                          className="px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-mono font-bold flex items-center gap-1 transition"
-                        >
-                          <Phone className="w-3 h-3" />
-                          <span>{c.phone}</span>
-                        </a>
-                      </div>
-                    ))}
-                  </div>
+              {contactGroups.length === 0 ? (
+                <div className="p-4 rounded-xl bg-surface border border-border text-center text-xs text-text-muted">
+                  No emergency directory contacts available.
                 </div>
-              ))}
+              ) : (
+                contactGroups.map((group, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                      {group.category || 'Emergency Contacts'}
+                    </p>
+                    <div className="space-y-2">
+                      {(group.contacts || []).map((c: any, cIdx: number) => (
+                        <div
+                          key={cIdx}
+                          className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-xs font-semibold text-text-primary">{c.name || 'Emergency Helpline'}</p>
+                            <p className="text-[10px] text-text-muted">{c.available || '24x7 Available'}</p>
+                          </div>
+                          <a
+                            href={`tel:${c.phone}`}
+                            className="px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-mono font-bold flex items-center gap-1 transition"
+                          >
+                            <Phone className="w-3 h-3" />
+                            <span>{c.phone || '112'}</span>
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

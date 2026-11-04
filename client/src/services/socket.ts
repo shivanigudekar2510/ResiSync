@@ -14,7 +14,8 @@ export const getSocket = (token?: string): Socket => {
 
     socket.on('connect', () => {
       console.log('⚡ Socket connected:', socket?.id);
-      socket?.emit('join-society', 'soc-greenview-01');
+      const socId = localStorage.getItem('resisync_society_id') || 'society-main';
+      socket?.emit('join-society', socId);
     });
 
     socket.on('disconnect', (reason) => {
