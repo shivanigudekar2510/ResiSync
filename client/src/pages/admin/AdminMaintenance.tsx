@@ -169,22 +169,20 @@ export const AdminMaintenance: React.FC = () => {
           <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-border">
             <button
               onClick={() => setActiveTab('maker-checker')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                activeTab === 'maker-checker'
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${activeTab === 'maker-checker'
                   ? 'bg-primary text-background shadow-sm'
                   : 'text-text-secondary hover:text-white'
-              }`}
+                }`}
             >
               <FileCheck className="w-3.5 h-3.5" />
               <span>Billing & Maker-Checker</span>
             </button>
             <button
               onClick={() => setActiveTab('invoices')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                activeTab === 'invoices'
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === 'invoices'
                   ? 'bg-primary text-background shadow-sm'
                   : 'text-text-secondary hover:text-white'
-              }`}
+                }`}
             >
               <span>Flat Invoices & Collections ({bills.length})</span>
             </button>

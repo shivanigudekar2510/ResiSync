@@ -229,12 +229,19 @@ export interface Complaint {
 
 export interface Announcement {
   id: string;
+  referenceId?: string;
   societyId: string;
   title: string;
   content: string;
-  category: 'URGENT' | 'IMPORTANT' | 'GENERAL' | 'EVENT' | 'MAINTENANCE';
+  category: string;
+  priority?: 'NORMAL' | 'IMPORTANT' | 'CRITICAL';
+  targetAudience?: string;
   isPinned: boolean;
   authorName: string;
+  authorRole?: string;
+  readCount?: number;
+  totalTargetFlats?: number;
+  channels?: string[];
   createdAt: string;
 }
 

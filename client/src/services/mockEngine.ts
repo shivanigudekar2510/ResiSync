@@ -21,6 +21,7 @@ const STORAGE_KEYS = {
   NOCS: `resisync_${STORAGE_VERSION}_nocs`,
   VIOLATIONS: `resisync_${STORAGE_VERSION}_violations`,
   IOT_STATE: `resisync_${STORAGE_VERSION}_iot_state`,
+  SETTINGS: `resisync_${STORAGE_VERSION}_settings`,
 };
 
 // Purge legacy demo keys and obsolete sessions
@@ -71,15 +72,16 @@ function setStored<T>(key: string, value: T): void {
 function ensureEmeraldGreensSeeded(): void {
   try {
     const societies = getStored<any[]>(STORAGE_KEYS.SOCIETIES, []);
-    const exists = societies.some((s) => s.societyCode === 'EGO-BLR-01' || s.id === 'soc-ego-blr-01');
-    if (exists) return;
-
     const socId = 'soc-ego-blr-01';
     const society = {
       id: socId,
       name: 'Emerald Greens Owners Association',
       societyCode: 'EGO-BLR-01',
+      registrationNumber: 'BLR/SOR/2024/7821',
       reraId: 'PRM/KA/RERA/1251/310/PR/2026/004812',
+      gstin: '29AABCE1234F1Z5',
+      billingCycleDay: 1,
+      makerCheckerThreshold: 50000,
       address: 'Outer Ring Road, Bellandur',
       city: 'Bengaluru',
       state: 'Karnataka',
@@ -398,6 +400,361 @@ function ensureEmeraldGreensSeeded(): void {
       },
     ];
 
+    const amenities: any[] = [
+      {
+        id: 'amen-ego-clubhouse',
+        societyId: socId,
+        name: 'Clubhouse Banquet Hall',
+        category: 'CLUBHOUSE',
+        pricing: 1500,
+        capacity: 80,
+        openTime: '08:00',
+        closeTime: '23:00',
+        slotDurationMinutes: 180,
+        status: 'AVAILABLE',
+        description: 'Grand air-conditioned banquet hall with dedicated catering pantry, stage, and acoustics.',
+        rules: 'Advance booking required. No loud music past 11:00 PM. ₹5,000 refundable security deposit.',
+        imageUrl: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=500',
+      },
+      {
+        id: 'amen-ego-pool',
+        societyId: socId,
+        name: 'Olympic Swimming Pool',
+        category: 'POOL',
+        pricing: 350,
+        capacity: 25,
+        openTime: '06:00',
+        closeTime: '21:00',
+        slotDurationMinutes: 60,
+        status: 'AVAILABLE',
+        description: 'Half-Olympic 25-meter temperature-controlled lap pool with certified lifeguard and kid paddling zone.',
+        rules: 'Proper synthetic swimwear mandatory. Shower before entering pool. Children must be supervised.',
+        imageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=500',
+      },
+      {
+        id: 'amen-ego-badminton',
+        societyId: socId,
+        name: 'Indoor Badminton & Squash Court',
+        category: 'SPORTS',
+        pricing: 200,
+        capacity: 4,
+        openTime: '06:00',
+        closeTime: '22:00',
+        slotDurationMinutes: 60,
+        status: 'AVAILABLE',
+        description: 'Two competition-grade wooden flooring courts equipped with anti-glare LED tournament lighting.',
+        rules: 'Non-marking gum rubber shoes strictly enforced. Maximum 4 players per booked court slot.',
+        imageUrl: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500',
+      },
+      {
+        id: 'amen-ego-coworking',
+        societyId: socId,
+        name: 'Co-Working & Library Lounge',
+        category: 'CLUBHOUSE',
+        pricing: 0,
+        capacity: 30,
+        openTime: '08:00',
+        closeTime: '22:00',
+        slotDurationMinutes: 240,
+        status: 'AVAILABLE',
+        description: 'High-speed fiber Wi-Fi workstations, ergonomic Herman Miller seating, and quiet focus reading pods.',
+        rules: 'Complimentary for all residents. Maintain library silence. Phone calls permitted in sound booths only.',
+        imageUrl: 'https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?w=500',
+      },
+      {
+        id: 'amen-ego-bbq',
+        societyId: socId,
+        name: 'Rooftop Barbecue Deck',
+        category: 'GARDEN',
+        pricing: 800,
+        capacity: 20,
+        openTime: '17:00',
+        closeTime: '23:00',
+        slotDurationMinutes: 180,
+        status: 'AVAILABLE',
+        description: 'Open-air panoramic rooftop terrace with stainless steel grill stations, dining pergolas, and ambient lighting.',
+        rules: 'Charcoal and gas grill safety protocols apply. Clean station after use. Extinguish flames by 11 PM.',
+        imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500',
+      },
+      {
+        id: 'amen-ego-suites',
+        societyId: socId,
+        name: 'Guest Suites A & B',
+        category: 'HALL',
+        pricing: 2000,
+        capacity: 4,
+        openTime: '12:00',
+        closeTime: '11:00',
+        slotDurationMinutes: 1440,
+        status: 'MAINTENANCE',
+        description: 'Furnished air-conditioned studio guest rooms for visiting family members of registered owners.',
+        rules: 'Check-in 12:00 PM, Check-out 11:00 AM. Government ID required for all staying visitors.',
+        imageUrl: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=500',
+      },
+    ];
+
+    const bookings: any[] = [
+      {
+        id: 'BK-8901',
+        societyId: socId,
+        userId: 'user-ego-resident-a402',
+        userName: 'Aarav Sharma (Flat A-402)',
+        amenityId: 'amen-ego-clubhouse',
+        amenity: { name: 'Clubhouse Banquet Hall', category: 'CLUBHOUSE' },
+        bookingDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        startTime: '18:00',
+        endTime: '21:00',
+        guestsCount: 45,
+        totalFee: 1500,
+        paymentStatus: 'PAID',
+        status: 'CONFIRMED',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+      },
+      {
+        id: 'BK-8902',
+        societyId: socId,
+        userId: 'user-ego-sneha-b204',
+        userName: 'Sneha Kulkarni (Flat B-204)',
+        amenityId: 'amen-ego-pool',
+        amenity: { name: 'Olympic Swimming Pool', category: 'POOL' },
+        bookingDate: new Date().toISOString().split('T')[0],
+        startTime: '07:00',
+        endTime: '08:00',
+        guestsCount: 2,
+        totalFee: 350,
+        paymentStatus: 'PAID',
+        status: 'CONFIRMED',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+      },
+      {
+        id: 'BK-8903',
+        societyId: socId,
+        userId: 'user-ego-kunal-c102',
+        userName: 'Kunal Verma (Flat C-102)',
+        amenityId: 'amen-ego-bbq',
+        amenity: { name: 'Rooftop Barbecue Deck', category: 'GARDEN' },
+        bookingDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
+        startTime: '19:00',
+        endTime: '22:00',
+        guestsCount: 12,
+        totalFee: 800,
+        paymentStatus: 'DEPOSIT_HELD',
+        status: 'PENDING_APPROVAL',
+        createdAt: new Date(Date.now() - 14400000).toISOString(),
+      },
+      {
+        id: 'BK-8904',
+        societyId: socId,
+        userId: 'user-ego-rohan-a201',
+        userName: 'Rohan Mehta (Flat A-201)',
+        amenityId: 'amen-ego-badminton',
+        amenity: { name: 'Indoor Badminton & Squash Court', category: 'SPORTS' },
+        bookingDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        startTime: '17:00',
+        endTime: '18:00',
+        guestsCount: 4,
+        totalFee: 200,
+        paymentStatus: 'PAID',
+        status: 'CONFIRMED',
+        createdAt: new Date(Date.now() - 28800000).toISOString(),
+      },
+      {
+        id: 'BK-8905',
+        societyId: socId,
+        userId: 'user-ego-neha-b302',
+        userName: 'Neha Gupta (Flat B-302)',
+        amenityId: 'amen-ego-coworking',
+        amenity: { name: 'Co-Working & Library Lounge', category: 'CLUBHOUSE' },
+        bookingDate: new Date().toISOString().split('T')[0],
+        startTime: '10:00',
+        endTime: '14:00',
+        guestsCount: 1,
+        totalFee: 0,
+        paymentStatus: 'COMPLIMENTARY',
+        status: 'CHECKED_IN',
+        createdAt: new Date(Date.now() - 54000000).toISOString(),
+      },
+    ];
+
+    const announcements: any[] = [
+      {
+        id: 'ann-cir-2026-114',
+        referenceId: 'CIR-2026-114',
+        societyId: socId,
+        title: 'Quarterly General Body Meeting (AGM) & FY26 Accounts Review',
+        category: 'GOVERNANCE',
+        priority: 'CRITICAL',
+        targetAudience: 'All Towers',
+        authorName: 'Priya Nair (RWA President)',
+        authorRole: 'RWA President',
+        isPinned: true,
+        readCount: 142,
+        totalTargetFlats: 160,
+        channels: ['IN_APP', 'WHATSAPP', 'EMAIL'],
+        content: 'The Annual General Body Meeting will be held this Sunday at 10:00 AM in the Clubhouse Banquet Hall. Key agenda items include FY26 audited expenditure reports, vendor SLA audit, and resident voting on the proposed solar rooftop microgrid expansion.',
+        createdAt: new Date(Date.now() - 172800000).toISOString(),
+      },
+      {
+        id: 'ann-cir-2026-115',
+        referenceId: 'CIR-2026-115',
+        societyId: socId,
+        title: 'Overhead Water Tank Chemical Disinfection & Pressure Test',
+        category: 'MAINTENANCE',
+        priority: 'IMPORTANT',
+        targetAudience: 'Tower A',
+        authorName: 'Vikram Menon (Facility Manager)',
+        authorRole: 'Facility Manager',
+        isPinned: true,
+        readCount: 128,
+        totalTargetFlats: 160,
+        channels: ['IN_APP', 'WHATSAPP'],
+        content: 'Semi-annual deep cleaning of Tower A overhead reservoir sumps is scheduled for Thursday from 10:00 AM to 02:00 PM. Water pressure will remain throttled during this window; please store sufficient domestic water in advance.',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+      },
+      {
+        id: 'ann-cir-2026-116',
+        referenceId: 'CIR-2026-116',
+        societyId: socId,
+        title: 'Diwali Deepotsav Gala & Cultural Community Food Festival',
+        category: 'EVENTS',
+        priority: 'NORMAL',
+        targetAudience: 'All Towers',
+        authorName: 'Priya Nair (RWA President)',
+        authorRole: 'RWA President',
+        isPinned: false,
+        readCount: 98,
+        totalTargetFlats: 160,
+        channels: ['IN_APP'],
+        content: 'Join the community at the central amphitheater for our annual cultural evening featuring musical performances, children talent showcase, artisanal food stalls, and eco-friendly diya illumination beginning at 6:30 PM.',
+        createdAt: new Date(Date.now() - 43200000).toISOString(),
+      },
+      {
+        id: 'ann-cir-2026-117',
+        referenceId: 'CIR-2026-117',
+        societyId: socId,
+        title: 'Mandatory Fire Alarm & Security Evacuation Drill Advisory',
+        category: 'EMERGENCY',
+        priority: 'CRITICAL',
+        targetAudience: 'All Towers',
+        authorName: 'Apex Security Services',
+        authorRole: 'Security Head',
+        isPinned: false,
+        readCount: 151,
+        totalTargetFlats: 160,
+        channels: ['IN_APP', 'WHATSAPP', 'SMS'],
+        content: 'A mandatory 10-minute fire alarm and security evacuation simulation will take place on Saturday at 11:30 AM. Stationed guards will guide residents down fire stairwells to the primary assembly ground.',
+        createdAt: new Date(Date.now() - 18000000).toISOString(),
+      },
+    ];
+
+    const auditLogs: any[] = [
+      {
+        id: 'audit-01',
+        societyId: socId,
+        createdAt: new Date(Date.now() - 600000).toISOString(),
+        actorName: 'Priya Nair',
+        actorRole: 'RWA President',
+        action: 'Co-signed Voucher VP-501 (₹1,45,000 to Apex Security)',
+        module: 'Financials',
+        ipAddress: '192.168.1.104',
+        terminal: 'Admin-HQ-Console-W01',
+        status: 'VERIFIED',
+        details: 'Approved second-signatory disbursement for monthly security service invoice with biometric attendance verification.',
+      },
+      {
+        id: 'audit-02',
+        societyId: socId,
+        createdAt: new Date(Date.now() - 1500000).toISOString(),
+        actorName: 'Ramesh Kumar',
+        actorRole: 'Security Guard',
+        action: 'Fast-Lane Verified Visitor Guest OTP 482910',
+        module: 'Gate Security',
+        ipAddress: '192.168.1.201',
+        terminal: 'Gate-1-Kiosk-FastLane',
+        status: 'VERIFIED',
+        details: 'Authenticated visitor Dr. Neha Verma for Flat A-402 with ANPR vehicle match KA 03 MZ 9812; barrier automatically opened.',
+      },
+      {
+        id: 'audit-03',
+        societyId: socId,
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        actorName: 'Suresh Babu',
+        actorRole: 'Maintenance Lead',
+        action: 'Verified Resident Closure OTP 5529 & Closed Ticket #TKT-801',
+        module: 'Helpdesk',
+        ipAddress: '10.0.4.15',
+        terminal: 'Tech-Handheld-T04',
+        status: 'VERIFIED',
+        details: 'Resolved Kitchen Pipe Leakage complaint for Flat A-402 after physical inspection; resident secret OTP verified.',
+      },
+      {
+        id: 'audit-04',
+        societyId: socId,
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        actorName: 'Vikram Menon',
+        actorRole: 'Facility Manager',
+        action: 'Triggered High TDS Alert Telemetry Test (365 ppm)',
+        module: 'IoT Control',
+        ipAddress: '192.168.1.180',
+        terminal: 'IoT-Supervisory-Station',
+        status: 'FLAGGED',
+        details: 'Manual hardware telemetry override exceeded 300 ppm threshold; broadcast warning event sent to resident dashboards.',
+      },
+      {
+        id: 'audit-05',
+        societyId: socId,
+        createdAt: new Date(Date.now() - 10800000).toISOString(),
+        actorName: 'Priya Nair',
+        actorRole: 'RWA President',
+        action: 'Approved Move-In NOC-301 for Vikram Sethi (Flat B-204)',
+        module: 'Governance',
+        ipAddress: '192.168.1.104',
+        terminal: 'Admin-HQ-Console-W01',
+        status: 'VERIFIED',
+        details: 'Verified tenant lease agreement and ₹25,000 moving deposit; auto-generated moving gate pass GP-301.',
+      },
+      {
+        id: 'audit-06',
+        societyId: socId,
+        createdAt: new Date(Date.now() - 14400000).toISOString(),
+        actorName: 'Ramesh Kumar',
+        actorRole: 'Security Guard',
+        action: 'Handed over delivery parcel Shelf B-12 with OTP 7741',
+        module: 'Gate Security',
+        ipAddress: '192.168.1.201',
+        terminal: 'Gate-1-Kiosk-FastLane',
+        status: 'VERIFIED',
+        details: 'Validated resident Aarav Sharma 4-digit secret pickup OTP for Blue Dart delivery; status updated to COLLECTED.',
+      },
+      {
+        id: 'audit-07',
+        societyId: socId,
+        createdAt: new Date(Date.now() - 21600000).toISOString(),
+        actorName: 'Aarav Sharma',
+        actorRole: 'Resident (Flat A-402)',
+        action: 'Paid Monthly Maintenance Bill ₹11,800 via 1-Tap UPI',
+        module: 'Financials',
+        ipAddress: '172.56.21.90',
+        terminal: 'Resident-Mobile-Client',
+        status: 'VERIFIED',
+        details: 'Electronic fund receipt REC-2026-7892 generated; ledger reconciled against Tower A corpus account.',
+      },
+    ];
+
+    const governanceSettings = {
+      societyId: socId,
+      registrationNumber: 'BLR/SOR/2024/7821',
+      reraId: 'PRM/KA/RERA/1251/310/PR/2026/004812',
+      gstin: '29AABCE1234F1Z5',
+      billingCycleDay: 1,
+      makerCheckerThreshold: 50000,
+      mandatoryGuestOtp: true,
+      overstayAutoAlert: true,
+      biometricStaffSync: true,
+      sosBroadcastEscalation: true,
+      updatedAt: new Date().toISOString(),
+    };
+
     const iotState = {
       towerAWaterTds: 245,
       tankLevel: 82,
@@ -405,37 +762,105 @@ function ensureEmeraldGreensSeeded(): void {
       isTdsAlert: false,
     };
 
-    societies.push(society);
+    const socIndex = societies.findIndex((s) => s.societyCode === 'EGO-BLR-01' || s.id === socId);
+    if (socIndex >= 0) {
+      societies[socIndex] = {
+        ...society,
+        ...societies[socIndex],
+        registrationNumber: societies[socIndex].registrationNumber || society.registrationNumber,
+        gstin: societies[socIndex].gstin || society.gstin,
+        billingCycleDay: societies[socIndex].billingCycleDay || society.billingCycleDay,
+        makerCheckerThreshold: societies[socIndex].makerCheckerThreshold || society.makerCheckerThreshold,
+      };
+    } else {
+      societies.push(society);
+    }
     setStored(STORAGE_KEYS.SOCIETIES, societies);
 
     const existingUsers = getStored<any[]>(STORAGE_KEYS.USERS, []);
-    existingUsers.push(...users);
-    setStored(STORAGE_KEYS.USERS, existingUsers);
+    if (!existingUsers.some((u) => u.societyId === socId)) {
+      existingUsers.push(...users);
+      setStored(STORAGE_KEYS.USERS, existingUsers);
+    }
 
     const existingFlats = getStored<any[]>(STORAGE_KEYS.FLATS, []);
-    existingFlats.push(...flats);
-    setStored(STORAGE_KEYS.FLATS, existingFlats);
+    if (!existingFlats.some((f) => f.societyId === socId)) {
+      existingFlats.push(...flats);
+      setStored(STORAGE_KEYS.FLATS, existingFlats);
+    }
 
     const existingVisitors = getStored<any[]>(STORAGE_KEYS.VISITORS, []);
-    existingVisitors.push(...visitors);
-    setStored(STORAGE_KEYS.VISITORS, existingVisitors);
+    if (!existingVisitors.some((v) => v.societyId === socId)) {
+      existingVisitors.push(...visitors);
+      setStored(STORAGE_KEYS.VISITORS, existingVisitors);
+    }
 
     const existingDeliveries = getStored<any[]>(STORAGE_KEYS.DELIVERIES, []);
-    existingDeliveries.push(...deliveries);
-    setStored(STORAGE_KEYS.DELIVERIES, existingDeliveries);
+    if (!existingDeliveries.some((d) => d.societyId === socId)) {
+      existingDeliveries.push(...deliveries);
+      setStored(STORAGE_KEYS.DELIVERIES, existingDeliveries);
+    }
 
     const existingBills = getStored<any[]>(STORAGE_KEYS.BILLS, []);
-    existingBills.push(...bills);
-    setStored(STORAGE_KEYS.BILLS, existingBills);
+    if (!existingBills.some((b) => b.societyId === socId)) {
+      existingBills.push(...bills);
+      setStored(STORAGE_KEYS.BILLS, existingBills);
+    }
 
     const existingComplaints = getStored<any[]>(STORAGE_KEYS.COMPLAINTS, []);
-    existingComplaints.push(...complaints);
-    setStored(STORAGE_KEYS.COMPLAINTS, existingComplaints);
+    if (!existingComplaints.some((c) => c.societyId === socId)) {
+      existingComplaints.push(...complaints);
+      setStored(STORAGE_KEYS.COMPLAINTS, existingComplaints);
+    }
 
-    setStored(STORAGE_KEYS.PAYOUTS, payouts);
-    setStored(STORAGE_KEYS.NOCS, nocs);
-    setStored(STORAGE_KEYS.VIOLATIONS, violations);
-    setStored(STORAGE_KEYS.IOT_STATE, iotState);
+    const existingAmenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []);
+    if (!existingAmenities.some((a) => a.societyId === socId)) {
+      existingAmenities.push(...amenities);
+      setStored(STORAGE_KEYS.AMENITIES, existingAmenities);
+    }
+
+    const existingBookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []);
+    if (!existingBookings.some((b) => b.societyId === socId)) {
+      existingBookings.push(...bookings);
+      setStored(STORAGE_KEYS.BOOKINGS, existingBookings);
+    }
+
+    const existingAnnouncements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []);
+    if (!existingAnnouncements.some((a) => a.societyId === socId)) {
+      existingAnnouncements.push(...announcements);
+      setStored(STORAGE_KEYS.ANNOUNCEMENTS, existingAnnouncements);
+    }
+
+    const existingAuditLogs = getStored<any[]>(STORAGE_KEYS.AUDIT_LOGS, []);
+    if (!existingAuditLogs.some((l) => l.societyId === socId)) {
+      existingAuditLogs.push(...auditLogs);
+      setStored(STORAGE_KEYS.AUDIT_LOGS, existingAuditLogs);
+    }
+
+    const existingSettings = getStored<any>(STORAGE_KEYS.SETTINGS, null);
+    if (!existingSettings || existingSettings.societyId !== socId) {
+      setStored(STORAGE_KEYS.SETTINGS, governanceSettings);
+    }
+
+    const existingPayouts = getStored<any[]>(STORAGE_KEYS.PAYOUTS, []);
+    if (!existingPayouts.some((p) => p.societyId === socId)) {
+      setStored(STORAGE_KEYS.PAYOUTS, payouts);
+    }
+
+    const existingNocs = getStored<any[]>(STORAGE_KEYS.NOCS, []);
+    if (!existingNocs.some((n) => n.societyId === socId)) {
+      setStored(STORAGE_KEYS.NOCS, nocs);
+    }
+
+    const existingViolations = getStored<any[]>(STORAGE_KEYS.VIOLATIONS, []);
+    if (!existingViolations.some((v) => v.societyId === socId)) {
+      setStored(STORAGE_KEYS.VIOLATIONS, violations);
+    }
+
+    const existingIotState = getStored<any>(STORAGE_KEYS.IOT_STATE, null);
+    if (!existingIotState) {
+      setStored(STORAGE_KEYS.IOT_STATE, iotState);
+    }
   } catch (err) {
     console.error('Failed to seed Emerald Greens test society:', err);
   }
@@ -1327,8 +1752,50 @@ export function handleMockRequest<T = any>(
 
   // ================= 12. AMENITIES & BOOKINGS =================
   if (pathname === '/amenities' && method === 'GET') {
-    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []).filter((a) => a.societyId === societyId);
+    let amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []).filter((a) => a.societyId === societyId || !societyId);
+    if (amenities.length === 0) {
+      amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []).filter((a) => a.societyId === 'soc-ego-blr-01');
+    }
     return Promise.resolve({ success: true, count: amenities.length, amenities } as any);
+  }
+
+  if (pathname === '/amenities' && method === 'POST') {
+    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []);
+    const newAmenity = {
+      id: `amen-${Date.now()}`,
+      societyId: societyId || 'soc-ego-blr-01',
+      name: body.name || 'New Facility',
+      category: body.category || 'CLUBHOUSE',
+      pricing: Number(body.pricing) || 0,
+      capacity: Number(body.capacity) || 20,
+      openTime: body.openTime || '07:00',
+      closeTime: body.closeTime || '22:00',
+      slotDurationMinutes: Number(body.slotDurationMinutes) || 60,
+      status: body.status || 'AVAILABLE',
+      description: body.description || '',
+      rules: body.rules || '',
+      imageUrl: body.imageUrl || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=500',
+    };
+    amenities.push(newAmenity);
+    setStored(STORAGE_KEYS.AMENITIES, amenities);
+    return Promise.resolve({ success: true, message: 'Facility registered successfully!', amenity: newAmenity } as any);
+  }
+
+  if (pathname.startsWith('/amenities/') && method === 'PATCH') {
+    const amenityId = pathname.split('/')[2];
+    const amenities = getStored<any[]>(STORAGE_KEYS.AMENITIES, []);
+    const a = amenities.find((item) => item.id === amenityId);
+    if (a) {
+      if (body.status !== undefined) a.status = body.status;
+      if (body.pricing !== undefined) a.pricing = Number(body.pricing);
+      if (body.capacity !== undefined) a.capacity = Number(body.capacity);
+      if (body.rules !== undefined) a.rules = body.rules;
+      if (body.openTime !== undefined) a.openTime = body.openTime;
+      if (body.closeTime !== undefined) a.closeTime = body.closeTime;
+      setStored(STORAGE_KEYS.AMENITIES, amenities);
+      return Promise.resolve({ success: true, message: 'Facility parameters updated!', amenity: a } as any);
+    }
+    return Promise.resolve({ success: false, message: 'Facility not found.' } as any);
   }
 
   if (pathname === '/bookings' && method === 'POST') {
@@ -1337,8 +1804,8 @@ export function handleMockRequest<T = any>(
     const amenity = amenities.find((a) => a.id === body.amenityId);
 
     const newBooking = {
-      id: `book-${Date.now()}`,
-      societyId,
+      id: `BK-${Math.floor(8910 + Math.random() * 90)}`,
+      societyId: societyId || 'soc-ego-blr-01',
       userId: currentUser?.id || 'res-01',
       userName: currentUser?.name || 'Resident',
       amenityId: body.amenityId,
@@ -1348,6 +1815,7 @@ export function handleMockRequest<T = any>(
       endTime: body.endTime || '08:00',
       guestsCount: Number(body.guestsCount) || 1,
       totalFee: amenity ? Number(amenity.pricing) : 0,
+      paymentStatus: amenity && Number(amenity.pricing) > 0 ? 'PAID' : 'COMPLIMENTARY',
       status: 'CONFIRMED',
       createdAt: new Date().toISOString(),
     };
@@ -1357,9 +1825,29 @@ export function handleMockRequest<T = any>(
     return Promise.resolve({ success: true, message: 'Amenity slot confirmed!', booking: newBooking } as any);
   }
 
+  if ((pathname === '/bookings/all' || pathname === '/bookings') && method === 'GET') {
+    let bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []).filter((b) => b.societyId === societyId || !societyId);
+    if (bookings.length === 0) {
+      bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []).filter((b) => b.societyId === 'soc-ego-blr-01');
+    }
+    return Promise.resolve({ success: true, count: bookings.length, bookings } as any);
+  }
+
+  if (pathname.includes('/status') && pathname.startsWith('/bookings/') && method === 'PATCH') {
+    const bookId = pathname.split('/')[2];
+    const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []);
+    const b = bookings.find((item) => item.id === bookId);
+    if (b) {
+      b.status = body.status || 'CONFIRMED';
+      setStored(STORAGE_KEYS.BOOKINGS, bookings);
+      return Promise.resolve({ success: true, message: `Booking ${b.id} updated to ${b.status}`, booking: b } as any);
+    }
+    return Promise.resolve({ success: false, message: 'Booking not found.' } as any);
+  }
+
   if (pathname === '/bookings/my' && method === 'GET') {
     const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []).filter(
-      (b) => b.societyId === societyId && b.userId === currentUser?.id
+      (b) => (b.societyId === societyId || !societyId) && b.userId === currentUser?.id
     );
     return Promise.resolve({ success: true, count: bookings.length, bookings } as any);
   }
@@ -1367,7 +1855,7 @@ export function handleMockRequest<T = any>(
   if (pathname.includes('/cancel') && method === 'POST') {
     const bookId = pathname.split('/')[2];
     const bookings = getStored<any[]>(STORAGE_KEYS.BOOKINGS, []);
-    const b = bookings.find((item) => item.id === bookId && item.societyId === societyId);
+    const b = bookings.find((item) => item.id === bookId && (item.societyId === societyId || !societyId));
     if (b) {
       b.status = 'CANCELLED';
       setStored(STORAGE_KEYS.BOOKINGS, bookings);
@@ -1467,26 +1955,61 @@ export function handleMockRequest<T = any>(
 
   // ================= 14. ANNOUNCEMENTS =================
   if (pathname === '/announcements' && method === 'GET') {
-    const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []).filter((a) => a.societyId === societyId);
+    let announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []).filter((a) => a.societyId === societyId || !societyId);
+    if (announcements.length === 0) {
+      announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []).filter((a) => a.societyId === 'soc-ego-blr-01');
+    }
+    const cat = searchParams.get('category');
+    if (cat && cat !== 'ALL') {
+      announcements = announcements.filter((a) => a.category?.toUpperCase() === cat.toUpperCase());
+    }
     return Promise.resolve({ success: true, count: announcements.length, announcements } as any);
   }
 
   if (pathname === '/announcements' && method === 'POST') {
     const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []);
+    const refId = `CIR-2026-${Math.floor(120 + Math.random() * 80)}`;
     const newAnnouncement = {
       id: `ann-${Date.now()}`,
-      societyId,
+      referenceId: refId,
+      societyId: societyId || 'soc-ego-blr-01',
       title: (body.title || 'Broadcast').trim(),
       content: (body.content || '').trim(),
-      category: body.category || 'GENERAL',
+      category: body.category || 'GOVERNANCE',
+      priority: body.priority || 'NORMAL',
+      targetAudience: body.targetAudience || 'All Towers',
+      authorName: currentUser?.name || 'Priya Nair (RWA President)',
+      authorRole: currentUser?.personaTitle || 'RWA President',
       isPinned: !!body.isPinned,
-      authorName: currentUser?.name || 'Estate Management',
+      channels: body.channels || ['IN_APP'],
+      readCount: 1,
+      totalTargetFlats: 160,
       createdAt: new Date().toISOString(),
     };
 
     announcements.unshift(newAnnouncement);
     setStored(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
-    return Promise.resolve({ success: true, announcement: newAnnouncement, message: 'Announcement broadcasted.' } as any);
+    return Promise.resolve({ success: true, announcement: newAnnouncement, message: `Circular ${refId} published successfully!` } as any);
+  }
+
+  if (pathname.includes('/pin') && pathname.startsWith('/announcements/') && method === 'PATCH') {
+    const annId = pathname.split('/')[2];
+    const announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []);
+    const ann = announcements.find((a) => a.id === annId);
+    if (ann) {
+      ann.isPinned = !ann.isPinned;
+      setStored(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+      return Promise.resolve({ success: true, message: ann.isPinned ? 'Circular pinned to top' : 'Circular unpinned', announcement: ann } as any);
+    }
+    return Promise.resolve({ success: false, message: 'Announcement not found.' } as any);
+  }
+
+  if (pathname.startsWith('/announcements/') && method === 'DELETE') {
+    const annId = pathname.split('/')[2];
+    let announcements = getStored<any[]>(STORAGE_KEYS.ANNOUNCEMENTS, []);
+    announcements = announcements.filter((a) => a.id !== annId);
+    setStored(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+    return Promise.resolve({ success: true, message: 'Circular archived successfully!' } as any);
   }
 
   // ================= 15. EMERGENCY SOS & CONTACTS =================
@@ -1767,8 +2290,14 @@ export function handleMockRequest<T = any>(
       success: true,
       config: {
         projectId: 'resisync-prod-cloud',
+        apiKey: 'AIzaSyA4Q92xLmK71P0-v9eZ81jLmK71P0v9eZ8',
+        authDomain: 'resisync-prod-cloud.firebaseapp.com',
+        storageBucket: 'resisync-prod-cloud.appspot.com',
+        messagingSenderId: '892104918231',
+        appId: '1:892104918231:web:d892a0194b18f0c29a88e1',
         syncMode: 'HYBRID',
         autoSyncIntervalSec: 30,
+        syncCollections: ['visitors', 'deliveries', 'complaints', 'maintenance', 'emergency', 'iot_telemetry', 'governance'],
         lastSyncedAt: new Date().toISOString(),
       },
       telemetry: {
@@ -1798,14 +2327,48 @@ export function handleMockRequest<T = any>(
     } as any);
   }
 
-  // ================= 18. NOTIFICATIONS & AUDIT LOGS =================
+  // ================= 18. NOTIFICATIONS & AUDIT LOGS & SETTINGS =================
   if (pathname === '/notifications' && method === 'GET') {
     return Promise.resolve({ success: true, unreadCount: 0, notifications: [] } as any);
   }
 
   if (pathname === '/admin/audit-logs' && method === 'GET') {
-    const logs = getStored<any[]>(STORAGE_KEYS.AUDIT_LOGS, []).filter((l) => l.societyId === societyId);
+    let logs = getStored<any[]>(STORAGE_KEYS.AUDIT_LOGS, []).filter((l) => l.societyId === societyId || !societyId);
+    if (logs.length === 0) {
+      logs = getStored<any[]>(STORAGE_KEYS.AUDIT_LOGS, []).filter((l) => l.societyId === 'soc-ego-blr-01');
+    }
     return Promise.resolve({ success: true, count: logs.length, logs } as any);
+  }
+
+  if (pathname === '/admin/settings' && method === 'GET') {
+    let settings = getStored<any>(STORAGE_KEYS.SETTINGS, null);
+    if (!settings || (societyId && settings.societyId !== societyId && settings.societyId !== 'soc-ego-blr-01')) {
+      settings = {
+        societyId: societyId || 'soc-ego-blr-01',
+        registrationNumber: 'BLR/SOR/2024/7821',
+        reraId: 'PRM/KA/RERA/1251/310/PR/2026/004812',
+        gstin: '29AABCE1234F1Z5',
+        billingCycleDay: 1,
+        makerCheckerThreshold: 50000,
+        mandatoryGuestOtp: true,
+        overstayAutoAlert: true,
+        biometricStaffSync: true,
+        sosBroadcastEscalation: true,
+      };
+    }
+    return Promise.resolve({ success: true, settings } as any);
+  }
+
+  if (pathname === '/admin/settings' && method === 'POST') {
+    const current = getStored<any>(STORAGE_KEYS.SETTINGS, {});
+    const updated = {
+      ...current,
+      ...body,
+      societyId: societyId || 'soc-ego-blr-01',
+      updatedAt: new Date().toISOString(),
+    };
+    setStored(STORAGE_KEYS.SETTINGS, updated);
+    return Promise.resolve({ success: true, message: 'Society governance and security policy updated successfully!', settings: updated } as any);
   }
 
   // Default Fallback

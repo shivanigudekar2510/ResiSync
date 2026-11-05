@@ -491,6 +491,47 @@ class ApiService {
     });
   }
 
+  createAmenity(payload: any) {
+    return this.request<{ success: boolean; amenity: any; message: string }>('/amenities', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  getAllBookings() {
+    return this.request<{ success: boolean; bookings: any[] }>('/bookings/all');
+  }
+
+  updateBookingStatus(id: string, status: string) {
+    return this.request<{ success: boolean; message: string; booking: any }>(`/bookings/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  deleteAnnouncement(id: string) {
+    return this.request<{ success: boolean; message: string }>(`/announcements/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  togglePinAnnouncement(id: string) {
+    return this.request<{ success: boolean; message: string; announcement: any }>(`/announcements/${id}/pin`, {
+      method: 'PATCH',
+    });
+  }
+
+  getSocietySettings() {
+    return this.request<{ success: boolean; settings: any }>('/admin/settings');
+  }
+
+  updateSocietySettings(payload: any) {
+    return this.request<{ success: boolean; message: string; settings: any }>('/admin/settings', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   // Notifications
   getNotifications() {
     return this.request<{ success: boolean; unreadCount: number; notifications: any[] }>('/notifications');
