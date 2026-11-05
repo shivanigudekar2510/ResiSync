@@ -114,9 +114,12 @@ export interface Delivery {
   trackingNumber?: string;
   deliveryPersonName?: string;
   phone?: string;
-  status: 'AT_GATE' | 'COLLECTED' | 'RETURNED';
+  status: 'AT_GATE' | 'HELD_AT_GATE' | 'COLLECTED' | 'RETURNED';
   gateEntryTime: string;
   collectedTime?: string;
+  shelfSlot?: string;
+  pickupOtp?: string;
+  receivedAt?: string;
   flat: Flat;
 }
 
@@ -185,7 +188,7 @@ export interface AmenityBooking {
 }
 
 export type ComplaintPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY';
-export type ComplaintStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'REOPENED';
+export type ComplaintStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REOPENED';
 export type ComplaintCategory = 'PLUMBING' | 'ELECTRICAL' | 'CLEANING' | 'SECURITY' | 'MAINTENANCE' | 'OTHER';
 
 export interface ComplaintComment {
@@ -212,6 +215,7 @@ export interface Complaint {
   assignedStaffName?: string;
   resolutionNotes?: string;
   resolvedAt?: string;
+  closureOtp?: string;
   createdAt: string;
   flat: Flat;
   user: {

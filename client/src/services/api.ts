@@ -428,6 +428,69 @@ class ApiService {
     });
   }
 
+  // Cross-Role Workflows: Gate Parcels, Closure OTPs, Maker-Checker, & IoT Telemetry
+  leaveParcelAtGate(id: string) {
+    return this.request<{ success: boolean; message: string; delivery: any }>(`/deliveries/${id}/leave-at-gate`, {
+      method: 'PATCH',
+    });
+  }
+
+  verifyPickupOtp(id: string, otp: string) {
+    return this.request<{ success: boolean; message: string; delivery: any }>(`/deliveries/${id}/verify-pickup-otp`, {
+      method: 'POST',
+      body: JSON.stringify({ otp }),
+    });
+  }
+
+  verifyComplaintClosureOtp(id: string, otp: string, resolutionNotes?: string) {
+    return this.request<{ success: boolean; message: string; complaint: any }>(`/complaints/${id}/verify-closure-otp`, {
+      method: 'POST',
+      body: JSON.stringify({ otp, resolutionNotes }),
+    });
+  }
+
+  getPayouts() {
+    return this.request<{ success: boolean; payouts: any[] }>('/payouts');
+  }
+
+  cosignPayout(id: string) {
+    return this.request<{ success: boolean; message: string; payout: any }>(`/payouts/${id}/cosign`, {
+      method: 'POST',
+    });
+  }
+
+  getNocs() {
+    return this.request<{ success: boolean; nocs: any[] }>('/nocs');
+  }
+
+  approveNoc(id: string) {
+    return this.request<{ success: boolean; message: string; noc: any }>(`/nocs/${id}/approve`, {
+      method: 'POST',
+    });
+  }
+
+  getViolations() {
+    return this.request<{ success: boolean; violations: any[] }>('/violations');
+  }
+
+  waiveViolation(id: string) {
+    return this.request<{ success: boolean; message: string; violation: any }>(`/violations/${id}/waive`, {
+      method: 'POST',
+    });
+  }
+
+  upholdViolation(id: string) {
+    return this.request<{ success: boolean; message: string; violation: any }>(`/violations/${id}/uphold`, {
+      method: 'POST',
+    });
+  }
+
+  toggleTdsAlert() {
+    return this.request<{ success: boolean; message: string; iotState: any }>('/iot/toggle-tds', {
+      method: 'POST',
+    });
+  }
+
   // Notifications
   getNotifications() {
     return this.request<{ success: boolean; unreadCount: number; notifications: any[] }>('/notifications');

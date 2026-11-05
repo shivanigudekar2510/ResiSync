@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
+import { TEST_PERSONAS } from '../data/testPersonas';
 import api from '../services/api';
 import { getSocket, disconnectSocket } from '../services/socket';
 
@@ -11,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<User | null>;
   quickLogin: (role: UserRole) => Promise<User | null>;
+  switchPersona: (email: string, password?: string) => Promise<User | null>;
   register: (payload: any) => Promise<void>;
   setAuthUser: (user: any, token: string) => void;
   logout: () => void;
@@ -73,10 +75,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const quickLogin = async (targetRole: UserRole): Promise<User | null> => {
-    let email = 'resident@resisync.com';
-    if (targetRole === 'SECURITY') email = 'guard@resisync.com';
-    if (targetRole === 'ADMIN') email = 'admin@resisync.com';
-    return await login(email, 'password123');
+    let email = 'resident@emeraldgreens.in';
+    let pass = 'Pass@123';
+    if (targetRole === 'SECURITY') {
+      email = 'guard@emeraldgreens.in';
+      pass = 'Gate@123';
+    }
+    if (targetRole === 'ADMIN') {
+      email = 'president@emeraldgreens.in';
+      pass = 'Admin@123';
+    }
+    return await login(email, pass);
+  };
+
+  const switchPersona = async (email: string, password?: string): Promise<User | null> => {
+    const persona = TEST_PERSONAS.find((p) => p.email.toLowerCase() === email.toLowerCase());
+    const pass = password || persona?.password || 'Pass@123';
+    return await login(email, pass);
   };
 
   const register = async (payload: any) => {
@@ -129,6 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         quickLogin,
+        switchPersona,
         register,
         setAuthUser,
         logout,

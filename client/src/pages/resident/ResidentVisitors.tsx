@@ -122,7 +122,7 @@ export const ResidentVisitors: React.FC = () => {
           className="px-4 py-2.5 rounded-xl bg-primary text-background font-bold text-xs hover:bg-primary-hover shadow-orange-glow transition flex items-center gap-2 self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>New Visitor Pass</span>
+          <span>Pre-Approve Guest</span>
         </button>
       </div>
 

@@ -91,6 +91,21 @@ export const ResidentSocietyStatus: React.FC = () => {
         </button>
       </div>
 
+      {/* High TDS Water Alert Banner if Active */}
+      {(health?.isTdsAlert || Number(health?.waterTds || 245) > 300) && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/50 flex items-start gap-3 animate-in fade-in">
+          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-bold text-amber-300">
+              ⚠️ High Water TDS Warning ({health?.waterTds || 365} ppm in Tower A)
+            </h4>
+            <p className="text-xs text-amber-200/90 mt-0.5 leading-relaxed">
+              Inflow sensor detected elevated Total Dissolved Solids exceeding safe drinking limit (300 ppm). Automated central RO filtration system is active.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* KPI Cards Row (Screen 9 Inspired) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Power Incomer */}
@@ -132,8 +147,8 @@ export const ResidentSocietyStatus: React.FC = () => {
             {health?.water?.value ?? 78.4} <span className="text-xs font-sans text-text-muted">%</span>
           </h3>
           <p className="text-[11px] text-text-secondary mt-1 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-status-info" />
-            <span>78,400 L • Overhead & Sump</span>
+            <span className={`w-2 h-2 rounded-full ${health?.isTdsAlert ? 'bg-status-warning' : 'bg-status-info'}`} />
+            <span>78,500 L • TDS: {health?.waterTds ?? 245} ppm</span>
           </p>
         </div>
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeToggle } from '../../components/common/ThemeToggle';
+import { TEST_PERSONAS, TestPersona } from '../../data/testPersonas';
 import {
   Eye,
   EyeOff,
@@ -11,6 +12,12 @@ import {
   ShieldCheck,
   Building2,
   Users,
+  Zap,
+  KeyRound,
+  Shield,
+  Cpu,
+  Wrench,
+  Truck,
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
@@ -46,6 +53,39 @@ export const LoginPage: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please verify your credentials.');
+    }
+  };
+
+  const handleAutoFillAndLogin = async (persona: TestPersona) => {
+    setError(null);
+    setIdentifier(persona.email);
+    setPassword(persona.password);
+    try {
+      const loggedUser = await login(persona.email, persona.password);
+      if (loggedUser) {
+        navigate(persona.defaultRoute);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Auto-login failed.');
+    }
+  };
+
+  const getPersonaIcon = (type: string) => {
+    switch (type) {
+      case 'RESIDENT':
+        return Users;
+      case 'GUARD':
+        return Shield;
+      case 'RWA':
+        return Building2;
+      case 'FACILITY':
+        return Cpu;
+      case 'TECH':
+        return Wrench;
+      case 'VENDOR':
+        return Truck;
+      default:
+        return KeyRound;
     }
   };
 
@@ -187,6 +227,76 @@ export const LoginPage: React.FC = () => {
             <Building2 className="w-3.5 h-3.5" />
             Register New Society
           </Link>
+        </div>
+      </div>
+
+      {/* Test Login Credentials Section (Single Society: EGO-BLR-01) */}
+      <div className="w-full max-w-4xl mt-8">
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-1">
+            <Zap className="w-3.5 h-3.5" />
+            <span>Test Login Credentials (Single Society: EGO-BLR-01)</span>
+          </div>
+          <p className="text-xs text-text-secondary max-w-2xl mx-auto">
+            You can type these credentials into the login screen, click <span className="text-primary font-semibold">Auto-Fill & Login</span> on any role card below, or use the <span className="text-text-primary font-semibold">Quick Switch Role bar</span> at the top of the app to jump between personas without losing your session state:
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {TEST_PERSONAS.map((persona) => {
+            const Icon = getPersonaIcon(persona.personaType);
+            return (
+              <div
+                key={persona.id}
+                className="bg-surface/90 hover:bg-surface border border-border/80 hover:border-primary/40 rounded-2xl p-4 transition shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-card text-text-muted border border-border">
+                      Persona #{persona.roleNumber}
+                    </span>
+                    <span className="text-[11px] font-bold text-primary flex items-center gap-1">
+                      <Icon className="w-3.5 h-3.5" />
+                      {persona.roleTitle}
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-black text-text-primary">{persona.name}</h3>
+                  <p className="text-xs text-text-secondary font-medium">{persona.unitOrPost}</p>
+
+                  <div className="mt-3 p-2.5 rounded-xl bg-card border border-border/60 text-[11px] space-y-1 font-mono">
+                    <div className="flex items-center justify-between">
+                      <span className="text-text-muted">Login ID:</span>
+                      <span className="text-text-primary font-semibold select-all">{persona.email}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-text-muted">Password:</span>
+                      <span className="text-text-primary font-semibold select-all">{persona.password}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5">
+                    <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider block mb-0.5">
+                      Pre-Loaded Test Codes & Data:
+                    </span>
+                    <p className="text-[11px] text-text-secondary leading-snug">
+                      {persona.testCodesSummary}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleAutoFillAndLogin(persona)}
+                  disabled={isLoading}
+                  className="mt-4 w-full py-2 px-3 rounded-xl bg-card hover:bg-primary hover:text-background border border-border hover:border-primary text-text-primary font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm group"
+                >
+                  <Zap className="w-3.5 h-3.5 text-primary group-hover:text-background transition" />
+                  <span>Auto-Fill & Login</span>
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

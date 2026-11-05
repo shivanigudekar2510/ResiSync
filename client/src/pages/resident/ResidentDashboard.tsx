@@ -41,6 +41,10 @@ export const ResidentDashboard: React.FC = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [activePass, setActivePass] = useState<Visitor | null>(null);
   const [deliveriesAtGate, setDeliveriesAtGate] = useState<number>(1);
+  const [incomingDelivery, setIncomingDelivery] = useState<any | null>(null);
+  const [leaveAtGateInfo, setLeaveAtGateInfo] = useState<{ shelfSlot: string; pickupOtp: string } | null>(null);
+  const [waterTds, setWaterTds] = useState<number>(245);
+  const [isTdsAlert, setIsTdsAlert] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
   // Pay Modal & Receipt
@@ -48,6 +52,26 @@ export const ResidentDashboard: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CARD' | 'NETBANKING'>('UPI');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paidReceipt, setPaidReceipt] = useState<any | null>(null);
+
+  const handleLeaveParcelAtGate = async () => {
+    if (!incomingDelivery?.id) return;
+    try {
+      const res = await api.leaveParcelAtGate(incomingDelivery.id);
+      if (res.success) {
+        setLeaveAtGateInfo({
+          shelfSlot: res.delivery?.shelfSlot || 'Shelf B-12',
+          pickupOtp: res.delivery?.pickupOtp || '7741',
+        });
+        showToast({
+          type: 'success',
+          title: 'Leave at Gate Authorized',
+          message: `Package assigned to ${res.delivery?.shelfSlot || 'Shelf B-12'}. 4-Digit Pickup OTP is ${res.delivery?.pickupOtp || '7741'}.`,
+        });
+      }
+    } catch (err: any) {
+      showToast({ type: 'error', title: 'Action Failed', message: err.message });
+    }
+  };
 
   const handlePayBill = async () => {
     if (!maintenanceDue?.billId) return;
@@ -93,12 +117,13 @@ export const ResidentDashboard: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [visRes, billsRes, annRes, compRes, delRes] = await Promise.all([
+        const [visRes, billsRes, annRes, compRes, delRes, iotRes] = await Promise.all([
           api.getVisitors({ tab: 'today' }).catch(() => ({ visitors: [] })),
           api.getBills('PENDING').catch(() => ({ bills: [] })),
           api.getAnnouncements().catch(() => ({ announcements: [] })),
           api.getComplaints().catch(() => ({ complaints: [] })),
-          api.getDeliveries('AT_GATE').catch(() => ({ deliveries: [] })),
+          api.getDeliveries().catch(() => ({ deliveries: [] })),
+          api.getIoTData().catch(() => ({ success: false })),
         ]);
 
         setUpcomingVisitors((visRes.visitors || []).slice(0, 3));
@@ -121,7 +146,29 @@ export const ResidentDashboard: React.FC = () => {
         }
         setAnnouncements((annRes.announcements || []).slice(0, 2));
         setComplaints((compRes.complaints || []).slice(0, 3));
-        setDeliveriesAtGate((delRes.deliveries || []).length);
+
+        const allDels = delRes.deliveries || [];
+        const gateDels = allDels.filter(
+          (d: any) => d.status === 'AT_GATE' || d.status === 'HELD_AT_GATE'
+        );
+        setDeliveriesAtGate(gateDels.length);
+
+        if (gateDels.length > 0) {
+          setIncomingDelivery(gateDels[0]);
+          if (gateDels[0].status === 'HELD_AT_GATE' || gateDels[0].pickupOtp) {
+            setLeaveAtGateInfo({
+              shelfSlot: gateDels[0].shelfSlot || 'Shelf B-12',
+              pickupOtp: gateDels[0].pickupOtp || '7741',
+            });
+          }
+        }
+
+        const iotData = iotRes as any;
+        if (iotData?.success && iotData.systemHealth) {
+          const currentTds = Number(iotData.systemHealth.waterTds || 245);
+          setWaterTds(currentTds);
+          setIsTdsAlert(!!iotData.systemHealth.isTdsAlert || currentTds > 300);
+        }
       } finally {
         setLoading(false);
       }
@@ -131,9 +178,14 @@ export const ResidentDashboard: React.FC = () => {
   }, []);
 
   const healthItems = [
-    { label: 'Gate Security', status: 'Optimal', icon: ShieldCheck, color: 'text-status-success' },
+    { label: 'Gate Security', status: 'Main Gate #1 Armed', icon: ShieldCheck, color: 'text-status-success' },
     { label: 'Grid Power', status: 'Online (238V)', icon: Zap, color: 'text-primary' },
-    { label: 'Water Supply', status: 'Tanks 78%', icon: Droplets, color: 'text-status-info' },
+    {
+      label: 'Water Supply',
+      status: isTdsAlert ? `⚠️ High TDS (${waterTds} ppm)` : `Tanks 82% (${waterTds} ppm)`,
+      icon: Droplets,
+      color: isTdsAlert ? 'text-status-warning' : 'text-status-info',
+    },
     { label: 'Fiber Net', status: 'Gigabit Active', icon: Wifi, color: 'text-status-success' },
   ];
 
@@ -208,6 +260,85 @@ export const ResidentDashboard: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* High Water TDS Warning Banner */}
+      {isTdsAlert && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 shadow-sm flex items-start justify-between gap-3 animate-in fade-in">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-bold text-amber-300">
+                ⚠️ High TDS Telemetry Alert ({waterTds} ppm Detected in Tower A)
+              </h4>
+              <p className="text-xs text-amber-200/90 mt-0.5 leading-relaxed">
+                Water quality sensor at Tower A Inflow Riser detected {waterTds} ppm (safe potable limit: 300 ppm). Automatic Reverse Osmosis filtration unit has been activated. Safe for utility use; drinking water RO active.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/resident/society-status')}
+            className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold whitespace-nowrap self-start sm:self-center"
+          >
+            Inspect IoT Telemetry
+          </button>
+        </div>
+      )}
+
+      {/* Incoming Gate Delivery Alert Banner (Leave-at-Gate Workflow) */}
+      {incomingDelivery && incomingDelivery.status !== 'COLLECTED' && (
+        <div className="p-4 rounded-2xl bg-card border border-primary/40 shadow-orange-glow flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+              <Package className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                  Gate Delivery Arrival
+                </span>
+                <span className="text-xs text-text-muted">Main Gate #1 Desk</span>
+              </div>
+              <h4 className="text-sm font-bold text-text-primary mt-0.5">
+                {incomingDelivery.company || 'BlueDart'} Parcel ({incomingDelivery.trackingNumber || 'BD-789210'}) for Flat {user?.flat?.flatNumber || 'A-402'}
+              </h4>
+              {leaveAtGateInfo ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs font-semibold text-status-success flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Assigned: {leaveAtGateInfo.shelfSlot}
+                  </span>
+                  <span className="text-xs text-text-muted">•</span>
+                  <span className="text-xs text-text-secondary font-mono">
+                    Pickup OTP: <strong className="text-primary text-sm tracking-widest">{leaveAtGateInfo.pickupOtp}</strong>
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-text-muted mt-0.5">
+                  Courier partner is at Main Gate #1. Authorize locker storage or allow direct entry to your floor.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            {!leaveAtGateInfo && (
+              <button
+                onClick={handleLeaveParcelAtGate}
+                className="px-4 py-2 rounded-xl bg-primary text-background font-bold text-xs hover:bg-primary-hover shadow-orange-glow transition flex items-center gap-1.5"
+              >
+                <Package className="w-4 h-4" />
+                <span>Leave Parcel at Gate</span>
+              </button>
+            )}
+            <button
+              onClick={() => showToast({ type: 'info', title: 'Direct Entry Approved', message: 'Gate barrier notified for direct flat delivery.' })}
+              className="px-3 py-2 rounded-xl bg-surface border border-border text-xs text-text-secondary hover:text-white font-medium hover:bg-card transition"
+            >
+              Direct Entry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Quick Actions Grid */}
       <div>
@@ -446,6 +577,14 @@ export const ResidentDashboard: React.FC = () => {
                   <p className="text-[10px] text-text-muted mt-1 capitalize">
                     Category: {c.category.toLowerCase()}
                   </p>
+                  {(c as any).closureOtp && c.status !== 'RESOLVED' && (
+                    <div className="mt-2 p-1.5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between text-[10px]">
+                      <span className="font-bold text-primary">Closure OTP:</span>
+                      <span className="font-mono font-black text-text-primary tracking-wider">
+                        {(c as any).closureOtp}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -465,7 +604,7 @@ export const ResidentDashboard: React.FC = () => {
         isOpen={showPayModal}
         onClose={() => setShowPayModal(false)}
         title="Settle Society Maintenance"
-        subtitle={`Invoice for Unit ${user?.flat?.flatNumber || 'A-402'} • Greenview Residency`}
+        subtitle={`Invoice for Unit ${user?.flat?.flatNumber || 'A-402'} • ${user?.society?.name || 'Emerald Greens Owners Association'}`}
       >
         <div className="space-y-5">
           {/* Amount Due Banner */}

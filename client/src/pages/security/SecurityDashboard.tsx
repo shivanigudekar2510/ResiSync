@@ -77,6 +77,27 @@ export const SecurityDashboard: React.FC = () => {
     }
   };
 
+  const handleVerifyAndOpenBarrier = async (codeToVerify?: string) => {
+    const code = (codeToVerify || searchCode).trim();
+    if (!code) return;
+    try {
+      const res = await api.verifyPass(code);
+      if (res.success && res.visitor) {
+        await api.checkInVisitor(res.visitor.id);
+        showToast({
+          type: 'success',
+          title: 'Fast-Lane Clearance: Barrier Opened',
+          message: `Boom barrier opened for ${res.visitor.name} to Flat ${res.visitor.flat?.flatNumber || 'A-402'}. Cross-dashboard entry synchronized.`,
+        });
+        setSearchCode('');
+        setVerifiedVisitor(null);
+        fetchGuardData();
+      }
+    } catch (err: any) {
+      showToast({ type: 'error', title: 'Verification Failed', message: err.message });
+    }
+  };
+
   const handleCheckIn = async (visitorId: string) => {
     try {
       const res = await api.checkInVisitor(visitorId);
@@ -157,14 +178,14 @@ export const SecurityDashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-status-success live-pulse" />
             <span className="text-xs font-bold text-text-secondary uppercase tracking-widest font-mono">
-              Gate 1 Ops Post • Vikram Singh
+              Main Gate #1 Ops Post • {user?.name || 'Ramesh Kumar'}
             </span>
           </div>
           <h2 className="text-2xl font-black text-white mt-1 font-sans">
             Gate Security Control Hub
           </h2>
           <p className="text-xs text-text-muted mt-0.5">
-            Greenview Residency Main Barrier • Live Camera & Pass Validation
+            {user?.society?.name || 'Emerald Greens Owners Association'} • Fast-Lane Kiosk & Automated Barrier Control
           </p>
         </div>
 
@@ -182,28 +203,67 @@ export const SecurityDashboard: React.FC = () => {
             className="flex-1 sm:flex-none px-4 py-3 rounded-xl bg-surface border border-border text-text-primary hover:border-primary/50 text-xs font-bold transition flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Walk-In Guest</span>
+            <span>Log Walk-In Visitor / Delivery</span>
           </button>
         </div>
       </div>
 
-      {/* Passcode Quick Search Input */}
-      <div className="p-4 rounded-2xl bg-surface border border-border flex items-center gap-3 shadow-sm">
-        <Search className="w-5 h-5 text-primary" />
-        <input
-          type="text"
-          value={searchCode}
-          onChange={(e) => setSearchCode(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleVerifyCode()}
-          placeholder="Enter 6-digit visitor pass code or scan QR string..."
-          className="flex-1 bg-transparent border-none outline-none text-sm text-text-primary placeholder:text-text-muted font-mono"
-        />
-        <button
-          onClick={() => handleVerifyCode()}
-          className="px-4 py-2 rounded-xl bg-primary text-background font-bold text-xs hover:bg-primary-hover transition"
-        >
-          Verify Pass
-        </button>
+      {/* Fast-Lane OTP Verifier Card */}
+      <div className="p-5 rounded-2xl bg-surface border border-primary/30 shadow-card space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            <div>
+              <h3 className="text-sm font-bold text-text-primary uppercase tracking-wide">
+                Fast-Lane OTP Verifier
+              </h3>
+              <p className="text-[11px] text-text-muted">
+                Enter 6-digit visitor pass code to instantly open the automated barrier and clear entry
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-text-muted">Pre-Loaded Test Pass:</span>
+            <button
+              onClick={() => {
+                setSearchCode('482910');
+                handleVerifyAndOpenBarrier('482910');
+              }}
+              className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/30 text-primary text-[11px] font-mono font-bold hover:bg-primary hover:text-background transition"
+            >
+              ⚡ 482910 (Dr. Neha Verma)
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative flex-1 w-full">
+            <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-3" />
+            <input
+              type="text"
+              value={searchCode}
+              onChange={(e) => setSearchCode(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleVerifyAndOpenBarrier()}
+              placeholder="Enter 6-digit visitor pass code (e.g. 482910)..."
+              className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted font-mono focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => handleVerifyAndOpenBarrier()}
+              className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-primary text-background font-black text-xs hover:bg-primary-hover shadow-orange-glow transition flex items-center justify-center gap-2"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Verify & Open Barrier</span>
+            </button>
+            <button
+              onClick={() => handleVerifyCode()}
+              className="px-4 py-2.5 rounded-xl bg-surface border border-border text-text-secondary hover:text-white text-xs font-semibold hover:bg-card transition"
+            >
+              Inspect Details
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* KPI Counters (Screen 11 Inspired) */}

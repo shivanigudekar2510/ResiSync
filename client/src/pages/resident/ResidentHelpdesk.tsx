@@ -113,9 +113,9 @@ export const ResidentHelpdesk: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Helpdesk & Maintenance Service</h2>
+          <h2 className="text-xl font-bold text-white tracking-tight">Helpdesk & OTP Service</h2>
           <p className="text-xs text-text-secondary mt-0.5">
-            Lodge maintenance tickets, track electrician/plumber assignments, and monitor service SLA
+            Lodge maintenance tickets, track assigned technicians, and release 4-digit closure OTP upon verification
           </p>
         </div>
         <button
@@ -193,6 +193,20 @@ export const ResidentHelpdesk: React.FC = () => {
                     </span>
                   )}
                 </div>
+
+                {c.closureOtp && c.status !== 'RESOLVED' && (
+                  <div className="mt-2 p-2 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-between gap-2 max-w-md">
+                    <div>
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">
+                        4-Digit Closure OTP (TKT-{c.ticketNumber.replace(/[^0-9]/g, '') || '801'})
+                      </span>
+                      <span className="text-sm font-mono font-black text-text-primary">{c.closureOtp}</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted text-right">
+                      Share with technician Suresh Babu ONLY after work verification
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2 self-end sm:self-center">
