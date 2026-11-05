@@ -152,37 +152,15 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
           })}
         </nav>
 
-        {/* Quick Role Switcher for seamless testing */}
+        {/* Society Status Badge */}
         <div className="px-3 py-2 border-t border-border bg-card/40">
-          <p className="text-[10px] uppercase font-bold tracking-wider text-text-muted px-1 mb-1.5">
-            Quick Switch Demo Role
-          </p>
-          <div className="grid grid-cols-3 gap-1">
-            <button
-              onClick={() => handleRoleSwitch('RESIDENT')}
-              className={`py-1 text-[11px] rounded font-medium transition ${
-                role === 'RESIDENT' ? 'bg-primary text-background font-bold' : 'bg-card text-text-secondary hover:text-white'
-              }`}
-            >
-              Resident
-            </button>
-            <button
-              onClick={() => handleRoleSwitch('SECURITY')}
-              className={`py-1 text-[11px] rounded font-medium transition ${
-                role === 'SECURITY' ? 'bg-primary text-background font-bold' : 'bg-card text-text-secondary hover:text-white'
-              }`}
-            >
-              Guard
-            </button>
-            <button
-              onClick={() => handleRoleSwitch('ADMIN')}
-              className={`py-1 text-[11px] rounded font-medium transition ${
-                role === 'ADMIN' ? 'bg-primary text-background font-bold' : 'bg-card text-text-secondary hover:text-white'
-              }`}
-            >
-              Admin
-            </button>
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-text-muted">Active Society</span>
+            <span className="text-[10px] font-mono font-bold text-primary">{user?.society?.societyCode || 'ENTERPRISE'}</span>
           </div>
+          <p className="text-xs font-semibold text-text-primary px-1 truncate mt-0.5">
+            {user?.society?.name || 'Residential Estate'}
+          </p>
         </div>
 
         {/* User Footer Profile & Logout */}
@@ -194,8 +172,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, onClose }) => {
               className="w-8 h-8 rounded-full border border-border object-cover"
             />
             <div className="truncate">
-              <p className="text-xs font-semibold text-text-primary truncate">{user?.name || 'Rahul Sharma'}</p>
-              <p className="text-[10px] text-text-muted truncate">{user?.email || 'resident@resisync.com'}</p>
+              <p className="text-xs font-semibold text-text-primary truncate">{user?.name || 'Estate Member'}</p>
+              <p className="text-[10px] text-text-muted truncate">{user?.email || user?.phone || ''}</p>
             </div>
           </div>
           <div className="flex items-center gap-1">

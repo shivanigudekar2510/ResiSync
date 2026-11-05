@@ -6,6 +6,8 @@ export interface User {
   email: string;
   phone: string;
   role: UserRole;
+  societyId?: string;
+  society?: Society;
   flatId?: string | null;
   avatarUrl?: string | null;
   isActive: boolean;

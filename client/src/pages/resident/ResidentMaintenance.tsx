@@ -165,7 +165,7 @@ export const ResidentMaintenance: React.FC = () => {
           <div>
             <h3 className="text-base font-bold text-white">All Dues Paid in Full</h3>
             <p className="text-xs text-text-secondary mt-0.5">
-              No outstanding maintenance balances for unit {user?.flat?.flatNumber || 'A-402'}. Thank you!
+              No outstanding maintenance balances for unit {user?.flat?.flatNumber || 'Assigned Unit'}. Thank you!
             </p>
           </div>
         </div>

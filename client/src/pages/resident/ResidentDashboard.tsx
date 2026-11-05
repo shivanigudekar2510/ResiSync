@@ -104,15 +104,19 @@ export const ResidentDashboard: React.FC = () => {
         setUpcomingVisitors((visRes.visitors || []).slice(0, 3));
         const pending = (billsRes.bills || [])[0];
         if (pending) {
+          const rawAmount = Number(pending.totalAmount ?? pending.amount ?? 0);
+          const rawDueDate = pending.dueDate ? new Date(pending.dueDate) : null;
           setMaintenanceDue({
-            amount: pending.totalAmount,
-            dueDate: new Date(pending.dueDate).toLocaleDateString('en-IN', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            }),
+            amount: rawAmount,
+            dueDate: rawDueDate && !isNaN(rawDueDate.getTime())
+              ? rawDueDate.toLocaleDateString('en-IN', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })
+              : 'Due this month',
             billId: pending.id,
-            billNumber: pending.billNumber,
+            billNumber: pending.billNumber || `BILL-${pending.id?.slice(-4) || '2026'}`,
           });
         }
         setAnnouncements((annRes.announcements || []).slice(0, 2));
@@ -150,16 +154,18 @@ export const ResidentDashboard: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-                Greenview Residency
+                {user?.society?.name || 'ResiSync Estate'}
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-border" />
-              <span className="text-xs text-text-muted">Tower A • Aster</span>
+              <span className="text-xs text-text-muted">
+                {user?.society?.societyCode ? `Code: ${user.society.societyCode}` : 'Residential Community'}
+              </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1 font-sans">
-              Welcome home, {user?.name?.split(' ')[0] || 'Rahul'} 👋
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-text-primary mt-1 font-sans">
+              Welcome home, {user?.name?.split(' ')[0] || 'Resident'} 👋
             </h2>
             <p className="text-xs text-text-secondary mt-1">
-              Unit <span className="text-primary font-bold">{user?.flat?.flatNumber || 'A-402'}</span> • Verified Resident Owner
+              Unit <span className="text-primary font-bold">{user?.flat?.flatNumber || 'Assigned Flat'}</span> • Verified Resident
             </p>
           </div>
 
@@ -276,7 +282,7 @@ export const ResidentDashboard: React.FC = () => {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center font-bold text-xs text-primary font-mono">
-                        {vis.passCode.slice(0, 3)}
+                        {(vis.passCode || 'VP').slice(0, 3)}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -287,7 +293,7 @@ export const ResidentDashboard: React.FC = () => {
                         </div>
                         <p className="text-[11px] text-text-muted mt-0.5 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          Expected: {new Date(vis.expectedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          Expected: {vis.expectedAt || (vis as any).expectedArrival ? new Date(vis.expectedAt || (vis as any).expectedArrival).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : 'Today'}
                           {vis.purpose && ` • ${vis.purpose}`}
                         </p>
                       </div>
@@ -333,15 +339,15 @@ export const ResidentDashboard: React.FC = () => {
                     Current Statement Dues
                   </span>
                   <div className="flex items-baseline gap-2 mt-0.5">
-                    <span className="text-2xl font-black text-white font-sans">
-                      ₹{maintenanceDue.amount.toLocaleString('en-IN')}
+                    <span className="text-2xl font-black text-text-primary font-sans">
+                      ₹{Number(maintenanceDue.amount || 0).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-status-warning font-medium">
                       Due: {maintenanceDue.dueDate}
                     </span>
                   </div>
                   <p className="text-[11px] text-text-muted mt-1">
-                    Includes Base Maintenance, Treated Water, Parking P-402 & Sinking Fund.
+                    Includes Base Maintenance, Common Utilities, Water Charges & Sinking Fund.
                   </p>
                 </div>
 

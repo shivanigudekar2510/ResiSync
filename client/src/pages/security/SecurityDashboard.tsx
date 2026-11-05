@@ -288,7 +288,9 @@ export const SecurityDashboard: React.FC = () => {
                     <StatusBadge status={v.status} size="sm" />
                   </td>
                   <td className="py-3.5 px-3 text-text-muted">
-                    {new Date(v.expectedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    {v.expectedAt || (v as any).expectedArrival
+                      ? new Date(v.expectedAt || (v as any).expectedArrival).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                      : 'Today'}
                   </td>
                   <td className="py-3.5 px-3 text-right">
                     {v.status === 'EXPECTED' || v.status === 'APPROVED' ? (

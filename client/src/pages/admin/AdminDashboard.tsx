@@ -37,62 +37,80 @@ export const AdminDashboard: React.FC = () => {
           setAnalytics(res);
         }
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const kpis = analytics?.kpis || {
-    totalResidents: 142,
-    totalFlats: 140,
-    occupiedFlats: 128,
-    vacantFlats: 12,
-    occupancyRate: 91,
-    visitorsToday: 24,
-    pendingApprovals: 2,
-    openComplaints: 3,
-    resolutionRate: 88,
-    totalCollected: 890000,
-    totalOutstanding: 65000,
-    onlineIoTDevices: 6,
-    totalIoTDevices: 6,
+  const kpis = {
+    totalResidents: analytics?.kpis?.residentsCount ?? analytics?.kpis?.totalResidents ?? 0,
+    totalFlats: analytics?.kpis?.totalFlats ?? 0,
+    occupiedFlats: analytics?.kpis?.occupiedFlats ?? 0,
+    vacantFlats: analytics?.kpis?.vacantFlats ?? 0,
+    occupancyRate: analytics?.kpis?.occupancyRate ?? 0,
+    visitorsToday: analytics?.kpis?.activeVisitors ?? analytics?.kpis?.visitorsToday ?? 0,
+    pendingApprovals: analytics?.kpis?.pendingApprovals ?? 0,
+    openComplaints: analytics?.kpis?.pendingComplaints ?? analytics?.kpis?.openComplaints ?? 0,
+    resolutionRate: analytics?.kpis?.resolutionRate ?? 100,
+    totalCollected: Number(analytics?.kpis?.totalCollected || 0),
+    totalOutstanding: Number(analytics?.kpis?.totalOutstanding || 0),
+    onlineIoTDevices: analytics?.kpis?.onlineIoTDevices ?? 4,
+    totalIoTDevices: analytics?.kpis?.totalIoTDevices ?? 4,
+    societyName: analytics?.kpis?.societyName || '',
   };
 
-  const charts = analytics?.charts || {
+  const defaultCharts = {
     monthlyCollection: [
-      { month: 'Jun', collected: 780000 },
-      { month: 'Jul', collected: 810000 },
-      { month: 'Aug', collected: 795000 },
-      { month: 'Sep', collected: 840000 },
-      { month: 'Oct', collected: 870000 },
-      { month: 'Nov', collected: 890000 },
+      { month: 'Jun', collected: 78000 },
+      { month: 'Jul', collected: 81000 },
+      { month: 'Aug', collected: 79500 },
+      { month: 'Sep', collected: 84000 },
+      { month: 'Oct', collected: 87000 },
+      { month: 'Nov', collected: 89000 },
     ],
     weeklyVisitors: [
-      { day: 'Mon', guests: 24, deliveries: 45, cabs: 18 },
-      { day: 'Tue', guests: 19, deliveries: 52, cabs: 22 },
-      { day: 'Wed', guests: 28, deliveries: 48, cabs: 16 },
-      { day: 'Thu', guests: 31, deliveries: 60, cabs: 25 },
-      { day: 'Fri', guests: 45, deliveries: 65, cabs: 34 },
-      { day: 'Sat', guests: 72, deliveries: 40, cabs: 42 },
-      { day: 'Sun', guests: 88, deliveries: 35, cabs: 48 },
+      { day: 'Mon', guests: 4, deliveries: 8, cabs: 3 },
+      { day: 'Tue', guests: 6, deliveries: 11, cabs: 4 },
+      { day: 'Wed', guests: 5, deliveries: 9, cabs: 2 },
+      { day: 'Thu', guests: 7, deliveries: 12, cabs: 5 },
+      { day: 'Fri', guests: 10, deliveries: 15, cabs: 6 },
+      { day: 'Sat', guests: 14, deliveries: 8, cabs: 7 },
+      { day: 'Sun', guests: 18, deliveries: 6, cabs: 9 },
     ],
     complaintCategories: [
-      { name: 'Plumbing', count: 4 },
-      { name: 'Electrical', count: 3 },
-      { name: 'Maintenance', count: 2 },
-      { name: 'Security', count: 1 },
-      { name: 'Cleaning', count: 1 },
+      { name: 'Plumbing', count: 1 },
+      { name: 'Electrical', count: 1 },
+      { name: 'General', count: 0 },
     ],
     paymentDistribution: [
-      { name: 'Paid On-Time', value: 112, color: '#10B981' },
-      { name: 'Pending', value: 20, color: '#F59E0B' },
-      { name: 'Overdue', value: 8, color: '#EF4444' },
+      { name: 'Paid On-Time', value: Math.max(1, kpis.occupiedFlats), color: '#10B981' },
+      { name: 'Pending', value: Math.max(0, kpis.totalFlats - kpis.occupiedFlats), color: '#F59E0B' },
+      { name: 'Overdue', value: 0, color: '#EF4444' },
     ],
     amenityUsage: [
-      { name: 'Gym', bookings: 84 },
-      { name: 'Pool', bookings: 62 },
-      { name: 'Tennis', bookings: 48 },
-      { name: 'Clubhouse', bookings: 29 },
-      { name: 'Hall', bookings: 12 },
+      { name: 'Club House', bookings: 12 },
+      { name: 'Swimming Pool', bookings: 18 },
+      { name: 'Fitness Gym', bookings: 25 },
     ],
+  };
+
+  const charts = {
+    monthlyCollection:
+      analytics?.charts?.monthlyCollection && analytics.charts.monthlyCollection.length > 0
+        ? analytics.charts.monthlyCollection.map((m: any) => ({
+            month: m.month,
+            collected: m.collected ?? m.amount ?? 0,
+          }))
+        : defaultCharts.monthlyCollection,
+    weeklyVisitors: analytics?.charts?.weeklyVisitors || defaultCharts.weeklyVisitors,
+    complaintCategories:
+      analytics?.charts?.complaintCategories && analytics.charts.complaintCategories.length > 0
+        ? analytics.charts.complaintCategories.map((c: any) => ({
+            name: c.name || c.category || 'General',
+            count: c.count || 0,
+          }))
+        : defaultCharts.complaintCategories,
+    paymentDistribution: analytics?.charts?.paymentDistribution || defaultCharts.paymentDistribution,
+    amenityUsage: analytics?.charts?.amenityUsage || defaultCharts.amenityUsage,
   };
 
   return (
@@ -100,9 +118,9 @@ export const AdminDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Society Operations & Analytics</h2>
+          <h2 className="text-xl font-bold text-text-primary tracking-tight">Society Operations & Analytics</h2>
           <p className="text-xs text-text-secondary mt-0.5">
-            Greenview Residency Estate Executive Command Center
+            {kpis.societyName ? `${kpis.societyName} Estate Command Center` : 'Executive Community Management Console'}
           </p>
         </div>
 
@@ -143,9 +161,9 @@ export const AdminDashboard: React.FC = () => {
           variant={kpis.openComplaints > 0 ? 'warning' : 'default'}
         />
         <StatCard
-          title="Nov Collections"
-          value={`₹${(kpis.totalCollected / 100000).toFixed(1)}L`}
-          subtitle="94% collection rate"
+          title="Collections"
+          value={kpis.totalCollected >= 100000 ? `₹${(kpis.totalCollected / 100000).toFixed(1)}L` : `₹${kpis.totalCollected.toLocaleString('en-IN')}`}
+          subtitle={`${kpis.resolutionRate}% collection rate`}
           icon={CreditCard}
           variant="success"
         />
