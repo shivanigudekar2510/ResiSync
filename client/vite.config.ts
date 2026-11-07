@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: true,
+    host: process.env.VITEST ? false : true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',

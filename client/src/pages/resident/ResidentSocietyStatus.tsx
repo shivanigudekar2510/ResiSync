@@ -111,9 +111,8 @@ export const ResidentSocietyStatus: React.FC = () => {
         {/* Power Incomer */}
         <div
           onClick={() => setSelectedMetric('power')}
-          className={`bg-card rounded-2xl border p-5 cursor-pointer transition-all ${
-            selectedMetric === 'power' ? 'border-primary ring-1 ring-primary shadow-orange-glow' : 'border-border hover:border-border-light'
-          }`}
+          className={`bg-card rounded-2xl border p-5 cursor-pointer transition-all ${selectedMetric === 'power' ? 'border-primary ring-1 ring-primary shadow-orange-glow' : 'border-border hover:border-border-light'
+            }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Substation Load</span>
@@ -133,9 +132,8 @@ export const ResidentSocietyStatus: React.FC = () => {
         {/* Water Reservoirs */}
         <div
           onClick={() => setSelectedMetric('water')}
-          className={`bg-card rounded-2xl border p-5 cursor-pointer transition-all ${
-            selectedMetric === 'water' ? 'border-primary ring-1 ring-primary shadow-orange-glow' : 'border-border hover:border-border-light'
-          }`}
+          className={`bg-card rounded-2xl border p-5 cursor-pointer transition-all ${selectedMetric === 'water' ? 'border-primary ring-1 ring-primary shadow-orange-glow' : 'border-border hover:border-border-light'
+            }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Water Storage</span>
@@ -155,9 +153,8 @@ export const ResidentSocietyStatus: React.FC = () => {
         {/* Air Quality & Environment */}
         <div
           onClick={() => setSelectedMetric('aqi')}
-          className={`bg-card rounded-2xl border p-5 cursor-pointer transition-all ${
-            selectedMetric === 'aqi' ? 'border-primary ring-1 ring-primary shadow-orange-glow' : 'border-border hover:border-border-light'
-          }`}
+          className={`bg-card rounded-2xl border p-5 cursor-pointer transition-all ${selectedMetric === 'aqi' ? 'border-primary ring-1 ring-primary shadow-orange-glow' : 'border-border hover:border-border-light'
+            }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Podium AQI & Temp</span>
@@ -177,9 +174,8 @@ export const ResidentSocietyStatus: React.FC = () => {
         {/* Parking Grid */}
         <div
           onClick={() => setSelectedMetric('parking')}
-          className={`bg-card rounded-2xl border p-5 cursor-pointer transition-all ${
-            selectedMetric === 'parking' ? 'border-primary ring-1 ring-primary shadow-orange-glow' : 'border-border hover:border-border-light'
-          }`}
+          className={`bg-card rounded-2xl border p-5 cursor-pointer transition-all ${selectedMetric === 'parking' ? 'border-primary ring-1 ring-primary shadow-orange-glow' : 'border-border hover:border-border-light'
+            }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Visitor Parking</span>
@@ -215,11 +211,10 @@ export const ResidentSocietyStatus: React.FC = () => {
               <button
                 key={m}
                 onClick={() => setSelectedMetric(m)}
-                className={`px-3 py-1 text-xs font-semibold capitalize rounded-lg transition ${
-                  selectedMetric === m
-                    ? 'bg-primary text-background'
-                    : 'text-text-muted hover:text-white'
-                }`}
+                className={`px-3 py-1 text-xs font-semibold capitalize rounded-lg transition ${selectedMetric === m
+                  ? 'bg-primary text-background'
+                  : 'text-text-muted hover:text-white'
+                  }`}
               >
                 {m}
               </button>

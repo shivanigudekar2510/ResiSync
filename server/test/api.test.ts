@@ -301,8 +301,10 @@ async function runTests() {
     });
     if (amenitiesRes.status === 200 && amenitiesRes.data.amenities?.length > 0) {
       const targetAmenity = amenitiesRes.data.amenities[0];
-      const randomDay = Math.floor(10 + Math.random() * 15);
-      const testDate = `2027-05-${randomDay}`;
+      const testYear = 2030 + Math.floor(Math.random() * 10);
+      const testMonth = String(Math.floor(1 + Math.random() * 12)).padStart(2, '0');
+      const testDay = String(Math.floor(1 + Math.random() * 28)).padStart(2, '0');
+      const testDate = `${testYear}-${testMonth}-${testDay}`;
       const slot1 = await request({
         method: 'POST',
         path: '/api/bookings',

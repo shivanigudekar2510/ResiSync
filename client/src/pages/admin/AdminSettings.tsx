@@ -67,12 +67,12 @@ export const AdminSettings: React.FC = () => {
 
   // Firebase Configuration State (with robust default fallbacks)
   const [config, setConfig] = useState({
-    projectId: 'resisync-prod-cloud',
-    apiKey: 'AIzaSyA4Q92xLmK71P0-v9eZ81jLmK71P0v9eZ8',
-    authDomain: 'resisync-prod-cloud.firebaseapp.com',
-    storageBucket: 'resisync-prod-cloud.appspot.com',
-    messagingSenderId: '892104918231',
-    appId: '1:892104918231:web:d892a0194b18f0c29a88e1',
+    projectId: 'resisync-46166',
+    apiKey: 'AIzaSyBU5c6H4Hj12qu-3Sf1YqbmWdU_JQz70Z8',
+    authDomain: 'resisync-46166.firebaseapp.com',
+    storageBucket: 'resisync-46166.firebasestorage.app',
+    messagingSenderId: '213466114463',
+    appId: '1:213466114463:web:a938b580c3c74f329f35aa',
     syncMode: 'HYBRID',
     autoSyncIntervalSec: 30,
     syncCollections: ['visitors', 'deliveries', 'complaints', 'maintenance', 'emergency', 'iot_telemetry', 'governance'],
